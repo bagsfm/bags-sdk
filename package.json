@@ -1,0 +1,71 @@
+{
+	"name": "@bagsfm/bags-sdk",
+	"version": "1.0.0",
+	"description": "TypeScript SDK for Bags",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsc",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "npm run clean && npm run build",
+		"dev": "tsc --watch",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "eslint src --ext .ts",
+		"lint:fix": "eslint src --ext .ts --fix",
+		"format": "prettier --write \"src/**/*.{ts,js,json}\"",
+		"format:check": "prettier --check \"src/**/*.{ts,js,json}\""
+	},
+	"keywords": [
+		"bags",
+		"solana",
+		"token",
+		"token launch",
+		"sdk",
+		"typescript",
+		"memecoin",
+		"meteora"
+	],
+	"author": {
+		"name": "Ramyo Bags",
+		"email": "ramyo@bags.fm",
+		"url": "https://github.com/ramyodev"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bagsfm/bags-public-api-sdk.git"
+	},
+	"homepage": "https://bags.fm",
+	"bugs": {
+		"url": "https://github.com/bagsfm/bags-public-api-sdk/issues"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"type": "commonjs",
+	"dependencies": {
+		"@coral-xyz/anchor": "^0.31.1",
+		"@meteora-ag/cp-amm-sdk": "^1.1.0",
+		"@meteora-ag/dynamic-bonding-curve-sdk": "^1.3.5",
+		"@solana/spl-token": "^0.4.13",
+		"@solana/web3.js": "^1.98.4",
+		"axios": "^1.11.0",
+		"bs58": "^6.0.0",
+		"form-data": "^4.0.4"
+	},
+	"devDependencies": {
+		"@types/bn.js": "^5.2.0",
+		"@typescript-eslint/eslint-plugin": "^8.39.0",
+		"@typescript-eslint/parser": "^8.39.0",
+		"eslint": "^9.32.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-prettier": "^5.5.3",
+		"prettier": "^3.6.2",
+		"typescript": "^5.0.0"
+	}
+}

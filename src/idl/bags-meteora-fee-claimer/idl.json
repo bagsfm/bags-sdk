@@ -1,0 +1,1398 @@
+{
+	"address": "FEEhPbKVKnco9EXnaY3i4R5rQVUx91wgVfu8qokixywi",
+	"metadata": {
+		"name": "bags_meteora_fee_claimer",
+		"version": "0.0.1",
+		"spec": "0.1.0"
+	},
+	"instructions": [
+		{
+			"name": "claim_a",
+			"docs": ["Claim fees as claimer_a", "", "[dbc] -> [fee_authority]", "[fee_authority] -> [claimer_a] & [vault_b]", "[vault_a] -> [claimer_a]"],
+			"discriminator": [161, 169, 182, 105, 63, 187, 190, 46],
+			"accounts": [
+				{
+					"name": "claimer_a",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "claimer_b"
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority_quote_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_quote_program"
+							},
+							{
+								"kind": "account",
+								"path": "quote_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "fee_authority_base_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_base_program"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "vault_a",
+					"docs": ["(PDA) Vault A state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "vault_b",
+					"docs": ["(PDA) Vault B state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "base_mint",
+					"docs": ["Mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["Mostly WSOL - this is the mint of the fees"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_base_program"
+				},
+				{
+					"name": "token_quote_program"
+				},
+				{
+					"name": "associated_token_program",
+					"address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+				},
+				{
+					"name": "dbc_program",
+					"docs": ["DBC Program"],
+					"address": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN"
+				},
+				{
+					"name": "pool_authority",
+					"docs": ["---------------- EXTRA ACCOUNTS FOR METEORA CPI ---------------------"],
+					"address": "FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM"
+				},
+				{
+					"name": "config"
+				},
+				{
+					"name": "pool",
+					"writable": true
+				},
+				{
+					"name": "base_vault",
+					"writable": true
+				},
+				{
+					"name": "quote_vault",
+					"docs": ["CHECK The vault token account for output token (checked in CPI)"],
+					"writable": true
+				},
+				{
+					"name": "dbc_event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								9, 96, 12, 165, 36, 247, 177, 183, 214, 204, 177, 195, 151, 58, 160, 51, 13, 25, 3, 218, 96, 28, 201, 181, 222, 227, 198, 98, 180, 202, 209, 73
+							]
+						}
+					}
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": []
+		},
+		{
+			"name": "claim_b",
+			"docs": ["Claim fees as claimer_b", "", "[dbc] -> [fee_authority]", "[fee_authority] -> [claimer_b] & [vault_a]", "[vault_b] -> [claimer_b]"],
+			"discriminator": [213, 21, 159, 131, 21, 57, 2, 67],
+			"accounts": [
+				{
+					"name": "claimer_b",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "claimer_a"
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority_quote_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_quote_program"
+							},
+							{
+								"kind": "account",
+								"path": "quote_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "fee_authority_base_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_base_program"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "vault_a",
+					"docs": ["(PDA) Vault A state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "vault_b",
+					"docs": ["(PDA) Vault B state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "base_mint",
+					"docs": ["Mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["Mostly WSOL - this is the mint of the fees"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_base_program"
+				},
+				{
+					"name": "token_quote_program"
+				},
+				{
+					"name": "associated_token_program",
+					"address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+				},
+				{
+					"name": "dbc_program",
+					"docs": ["DBC Program"],
+					"address": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN"
+				},
+				{
+					"name": "pool_authority",
+					"docs": ["---------------- EXTRA ACCOUNTS FOR METEORA CPI ---------------------"],
+					"address": "FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM"
+				},
+				{
+					"name": "config"
+				},
+				{
+					"name": "pool",
+					"writable": true
+				},
+				{
+					"name": "base_vault",
+					"writable": true
+				},
+				{
+					"name": "quote_vault",
+					"docs": ["CHECK The vault token account for output token (checked in CPI)"],
+					"writable": true
+				},
+				{
+					"name": "dbc_event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								9, 96, 12, 165, 36, 247, 177, 183, 214, 204, 177, 195, 151, 58, 160, 51, 13, 25, 3, 218, 96, 28, 201, 181, 222, 227, 198, 98, 180, 202, 209, 73
+							]
+						}
+					}
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": []
+		},
+		{
+			"name": "claim_damm_a",
+			"docs": ["Claim DAMM fees as claimer_a", "", "[damm] -> [fee_authority]", "[fee_authority] -> [claimer_a] & [vault_b]", "[vault_a] -> [claimer_a]"],
+			"discriminator": [23, 251, 214, 27, 55, 68, 16, 87],
+			"accounts": [
+				{
+					"name": "claimer_a",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "claimer_b"
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority_quote_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_quote_program"
+							},
+							{
+								"kind": "account",
+								"path": "quote_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "fee_authority_base_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_base_program"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "vault_a",
+					"docs": ["(PDA) Vault A state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "vault_b",
+					"docs": ["(PDA) Vault B state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "base_mint",
+					"docs": ["Mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["Mostly WSOL - this is the mint of the fees"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_base_program"
+				},
+				{
+					"name": "token_quote_program"
+				},
+				{
+					"name": "associated_token_program",
+					"address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+				},
+				{
+					"name": "damm_program",
+					"address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+				},
+				{
+					"name": "pool_authority",
+					"docs": ["---------------- EXTRA ACCOUNTS FOR METEORA CPI ---------------------"],
+					"address": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+				},
+				{
+					"name": "pool"
+				},
+				{
+					"name": "position",
+					"writable": true
+				},
+				{
+					"name": "base_vault",
+					"writable": true
+				},
+				{
+					"name": "quote_vault",
+					"writable": true
+				},
+				{
+					"name": "position_nft_account",
+					"docs": ["The token account for nft", ""]
+				},
+				{
+					"name": "damm_event_authority",
+					"address": "3rmHSu74h1ZcmAisVcWerTCiRDQbUrBKmcwptYGjHfet"
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": []
+		},
+		{
+			"name": "claim_damm_b",
+			"docs": ["Claim DAMM fees as claimer_a", "", "[damm] -> [fee_authority]", "[fee_authority] -> [claimer_b] & [vault_a]", "[vault_b] -> [claimer_b]"],
+			"discriminator": [85, 187, 79, 227, 148, 222, 169, 95],
+			"accounts": [
+				{
+					"name": "claimer_b",
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "claimer_a"
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority_quote_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_quote_program"
+							},
+							{
+								"kind": "account",
+								"path": "quote_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "fee_authority_base_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_base_program"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "vault_a",
+					"docs": ["(PDA) Vault A state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "vault_b",
+					"docs": ["(PDA) Vault B state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "base_mint",
+					"docs": ["Mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["Mostly WSOL - this is the mint of the fees"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_base_program"
+				},
+				{
+					"name": "token_quote_program"
+				},
+				{
+					"name": "associated_token_program",
+					"address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+				},
+				{
+					"name": "damm_program",
+					"address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+				},
+				{
+					"name": "pool_authority",
+					"docs": ["---------------- EXTRA ACCOUNTS FOR METEORA CPI ---------------------"],
+					"address": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+				},
+				{
+					"name": "pool"
+				},
+				{
+					"name": "position",
+					"writable": true
+				},
+				{
+					"name": "base_vault",
+					"writable": true
+				},
+				{
+					"name": "quote_vault",
+					"writable": true
+				},
+				{
+					"name": "position_nft_account",
+					"docs": ["The token account for nft", ""]
+				},
+				{
+					"name": "damm_event_authority",
+					"address": "3rmHSu74h1ZcmAisVcWerTCiRDQbUrBKmcwptYGjHfet"
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": []
+		},
+		{
+			"name": "create_fee_vaults",
+			"docs": ["Create fee vaults", "", "Only an admin can create fee vaults"],
+			"discriminator": [40, 216, 239, 141, 127, 220, 173, 221],
+			"accounts": [
+				{
+					"name": "payer",
+					"docs": ["Payer for the creation of the vaults (can be same as authority)"],
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "authority"
+				},
+				{
+					"name": "claimer_a",
+					"docs": ["Claimer A account"]
+				},
+				{
+					"name": "claimer_b",
+					"docs": ["Claimer B account"]
+				},
+				{
+					"name": "vault_a",
+					"docs": ["(PDA) Vault A state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "vault_b",
+					"docs": ["(PDA) Vault B state account"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [118, 97, 117, 108, 116]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "fee_authority_quote_ata",
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "account",
+								"path": "fee_authority"
+							},
+							{
+								"kind": "account",
+								"path": "token_program"
+							},
+							{
+								"kind": "account",
+								"path": "quote_mint"
+							}
+						],
+						"program": {
+							"kind": "const",
+							"value": [
+								140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216, 219, 233, 248, 89
+							]
+						}
+					}
+				},
+				{
+					"name": "base_mint",
+					"docs": ["base mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["quote mint of the bonding curve token (WSOL)"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_program"
+				},
+				{
+					"name": "associated_token_program",
+					"address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": [
+				{
+					"name": "input",
+					"type": {
+						"defined": {
+							"name": "CreateFeeVaultsParameters"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "tweak_fee_vaults",
+			"docs": ["Create fee vaults settings (bps)", "", "Only an admin can change fee vaults settings"],
+			"discriminator": [237, 183, 240, 142, 11, 228, 143, 234],
+			"accounts": [
+				{
+					"name": "payer",
+					"docs": ["Payer for the creation of the vaults (can be same as authority)"],
+					"writable": true,
+					"signer": true
+				},
+				{
+					"name": "authority",
+					"docs": ["Authority allowed to tweak fee vaults"],
+					"signer": true
+				},
+				{
+					"name": "fee_authority",
+					"docs": ["(PDA) Fee authority account to be passed to meteora as fee claimer"],
+					"writable": true,
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [102, 101, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							},
+							{
+								"kind": "account",
+								"path": "claimer_a"
+							},
+							{
+								"kind": "account",
+								"path": "claimer_b"
+							},
+							{
+								"kind": "account",
+								"path": "base_mint"
+							}
+						]
+					}
+				},
+				{
+					"name": "claimer_a",
+					"docs": ["Claimer A account"]
+				},
+				{
+					"name": "claimer_b",
+					"docs": ["Claimer B account"]
+				},
+				{
+					"name": "base_mint",
+					"docs": ["base mint of the bonding curve token"]
+				},
+				{
+					"name": "quote_mint",
+					"docs": ["quote mint of the bonding curve token (WSOL)"]
+				},
+				{
+					"name": "system_program",
+					"docs": ["Programs"],
+					"address": "11111111111111111111111111111111"
+				},
+				{
+					"name": "token_program"
+				},
+				{
+					"name": "event_authority",
+					"pda": {
+						"seeds": [
+							{
+								"kind": "const",
+								"value": [95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]
+							}
+						]
+					}
+				},
+				{
+					"name": "program"
+				}
+			],
+			"args": [
+				{
+					"name": "input",
+					"type": {
+						"defined": {
+							"name": "TweakFeeVaultsParameters"
+						}
+					}
+				}
+			]
+		}
+	],
+	"accounts": [
+		{
+			"name": "FeeAuthority",
+			"discriminator": [135, 162, 91, 24, 156, 94, 193, 104]
+		},
+		{
+			"name": "Vault",
+			"discriminator": [211, 8, 232, 43, 2, 152, 117, 119]
+		}
+	],
+	"events": [
+		{
+			"name": "DAMMClaimedEvent",
+			"discriminator": [218, 142, 187, 210, 111, 192, 166, 237]
+		},
+		{
+			"name": "DBCClaimedEvent",
+			"discriminator": [144, 46, 37, 27, 10, 171, 177, 31]
+		},
+		{
+			"name": "FeeVaultsCreatedEvent",
+			"discriminator": [29, 33, 12, 23, 95, 249, 238, 190]
+		},
+		{
+			"name": "FeeVaultsTweakedEvent",
+			"discriminator": [118, 193, 160, 81, 236, 170, 187, 139]
+		}
+	],
+	"errors": [
+		{
+			"code": 6000,
+			"name": "TypeConversionFailed",
+			"msg": "Type conversion failed"
+		},
+		{
+			"code": 6001,
+			"name": "CheckedCalculationOverflow",
+			"msg": "Checked Calculation overflowed"
+		},
+		{
+			"code": 6002,
+			"name": "InvalidBPS",
+			"msg": "Invalid BPS provided, total of both should equal 100"
+		},
+		{
+			"code": 6003,
+			"name": "Unauthorized",
+			"msg": "Unauthorized"
+		},
+		{
+			"code": 6004,
+			"name": "InvalidClaimerOrdering",
+			"msg": "Invalid ordering of claimers, claimer_a must be less than claimer_b"
+		}
+	],
+	"types": [
+		{
+			"name": "CreateFeeVaultsParameters",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "claimer_a_bps",
+						"docs": ["% of the fee to claimer A"],
+						"type": "u16"
+					},
+					{
+						"name": "claimer_b_bps",
+						"docs": ["% of the fee to claimer B"],
+						"type": "u16"
+					}
+				]
+			}
+		},
+		{
+			"name": "DAMMClaimedEvent",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "claimer",
+						"docs": ["Who initiated the claim"],
+						"type": "pubkey"
+					},
+					{
+						"name": "damm_total_fees",
+						"docs": ["The total fees claimed from Meteora DAMM by authority"],
+						"type": "u64"
+					},
+					{
+						"name": "claimer_share",
+						"docs": ["Claimer share from the just claimed fees"],
+						"type": "u64"
+					},
+					{
+						"name": "total_claimer_fees",
+						"docs": ["Total claimed (share + what's already in vault)"],
+						"type": "u64"
+					},
+					{
+						"name": "partner_share",
+						"docs": ["Partner share from the just claimed fees"],
+						"type": "u64"
+					},
+					{
+						"name": "total_partner_fees",
+						"docs": ["Total fees yet to be claimed by partner"],
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "DBCClaimedEvent",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "claimer",
+						"docs": ["Who initiated the claim"],
+						"type": "pubkey"
+					},
+					{
+						"name": "dbc_total_fees",
+						"docs": ["The total fees claimed from Meteora DBC by authority"],
+						"type": "u64"
+					},
+					{
+						"name": "claimer_share",
+						"docs": ["Claimer share from the just claimed fees"],
+						"type": "u64"
+					},
+					{
+						"name": "total_claimer_fees",
+						"docs": ["Total claimed (share + what's already in vault)"],
+						"type": "u64"
+					},
+					{
+						"name": "partner_share",
+						"docs": ["Partner share from the just claimed fees"],
+						"type": "u64"
+					},
+					{
+						"name": "total_partner_fees",
+						"docs": ["Total fees yet to be claimed by partner"],
+						"type": "u64"
+					}
+				]
+			}
+		},
+		{
+			"name": "FeeAuthority",
+			"docs": ["Fee authority to be passed to meteora to claim all fees and distribute them to the claimers", "according to saved BPS set on initialization."],
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "claimer_a",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_b",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_a_bps",
+						"type": "u16"
+					},
+					{
+						"name": "claimer_b_bps",
+						"type": "u16"
+					},
+					{
+						"name": "mint",
+						"type": "pubkey"
+					},
+					{
+						"name": "bump",
+						"type": "u8"
+					}
+				]
+			}
+		},
+		{
+			"name": "FeeVaultsCreatedEvent",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "fee_authority",
+						"type": "pubkey"
+					},
+					{
+						"name": "base_mint",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_a",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_b",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_a_bps",
+						"type": "u16"
+					},
+					{
+						"name": "claimer_b_bps",
+						"type": "u16"
+					}
+				]
+			}
+		},
+		{
+			"name": "FeeVaultsTweakedEvent",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "fee_authority",
+						"type": "pubkey"
+					},
+					{
+						"name": "base_mint",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_a",
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer_b",
+						"type": "pubkey"
+					},
+					{
+						"name": "old_claimer_a_bps",
+						"type": "u16"
+					},
+					{
+						"name": "old_claimer_b_bps",
+						"type": "u16"
+					},
+					{
+						"name": "claimer_a_bps",
+						"type": "u16"
+					},
+					{
+						"name": "claimer_b_bps",
+						"type": "u16"
+					}
+				]
+			}
+		},
+		{
+			"name": "TweakFeeVaultsParameters",
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "claimer_a_bps",
+						"docs": ["% of the fee to claimer A"],
+						"type": "u16"
+					},
+					{
+						"name": "claimer_b_bps",
+						"docs": ["% of the fee to claimer B"],
+						"type": "u16"
+					}
+				]
+			}
+		},
+		{
+			"name": "Vault",
+			"docs": ["Vault that is storing the fees"],
+			"type": {
+				"kind": "struct",
+				"fields": [
+					{
+						"name": "authority",
+						"docs": ["Fee authority on this vault"],
+						"type": "pubkey"
+					},
+					{
+						"name": "claimer",
+						"docs": ["Claimer of the fees"],
+						"type": "pubkey"
+					},
+					{
+						"name": "bump",
+						"docs": ["Bump seed for the vault account"],
+						"type": "u8"
+					}
+				]
+			}
+		}
+	]
+}
