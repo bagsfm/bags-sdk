@@ -1,5 +1,11 @@
 # @bagsfm/bags-sdk
 
+[![npm version](https://badge.fury.io/js/@bagsfm%2Fbags-sdk.svg)](https://badge.fury.io/js/@bagsfm%2Fbags-sdk)
+[![npm downloads](https://img.shields.io/npm/dm/@bagsfm/bags-sdk.svg)](https://www.npmjs.com/package/@bagsfm/bags-sdk)
+[![license](https://img.shields.io/npm/l/@bagsfm/bags-sdk.svg)](https://github.com/bagsfm/bags-public-api-sdk/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Solana](https://img.shields.io/badge/Solana-9945FF?logo=solana&logoColor=white)](https://solana.com/)
+
 A TypeScript SDK for interacting with the Bags Public API - Solana token launch and management platform.
 
 ## Installation
