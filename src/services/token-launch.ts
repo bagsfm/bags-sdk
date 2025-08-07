@@ -50,9 +50,16 @@ export class TokenLaunchService extends BaseService {
 		formData.append('name', params.name);
 		formData.append('symbol', params.symbol);
 		formData.append('description', params.description);
-		formData.append('telegram', params.telegram);
-		formData.append('website', params.website);
-		formData.append('twitter', params.twitter);
+
+		if (params.telegram) {
+			formData.append('telegram', params.telegram);
+		}
+		if (params.website) {
+			formData.append('website', params.website);
+		}
+		if (params.twitter) {
+			formData.append('twitter', params.twitter);
+		}
 
 		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>('/token-launch/create-token-info', formData, {
 			headers: {
