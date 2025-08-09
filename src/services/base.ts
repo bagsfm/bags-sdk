@@ -5,6 +5,7 @@ import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/b
 import { Commitment, Connection } from '@solana/web3.js';
 import { createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
 import { BagsApiClient } from '../api/bags-client';
+import { StateService } from './state';
 
 export class BaseService {
 	protected bagsApiClient: BagsApiClient;
@@ -13,6 +14,7 @@ export class BaseService {
 	protected bagsMeteoraFeeClaimer: Program<BagsMeteoraFeeClaimerIDL>;
 	protected connection: Connection;
 	protected commitment: Commitment;
+	protected stateService: StateService;
 
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
 		this.bagsApiClient = new BagsApiClient(apiKey);
@@ -21,5 +23,6 @@ export class BaseService {
 		this.bagsMeteoraFeeClaimer = createBagsMeteoraFeeClaimerProgram(connection, commitment).program;
 		this.connection = connection;
 		this.commitment = commitment;
+		this.stateService = new StateService(apiKey, connection, commitment);
 	}
 }

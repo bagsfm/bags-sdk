@@ -1,12 +1,28 @@
 import { Commitment, Connection, PublicKey } from '@solana/web3.js';
-import { BaseService } from './base';
-import { TokenLaunchCreator } from '../types/api';
+import { GetPoolConfigKeyByFeeClaimerVaultApiResponse, TokenLaunchCreator } from '../types/api';
+import { Program } from '@coral-xyz/anchor';
+import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
+import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
+import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/bags-meteora-fee-claimer/idl';
+import { BagsApiClient } from '../api/bags-client';
+import { createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
 
-export class StateService extends BaseService {
+export class StateService {
+	protected bagsApiClient: BagsApiClient;
+	protected dbcProgram: Program<DynamicBondingCurveIDL>;
+	protected dammV2Program: Program<DammV2IDL>;
+	protected bagsMeteoraFeeClaimer: Program<BagsMeteoraFeeClaimerIDL>;
+	protected connection: Connection;
+	protected commitment: Commitment;
+
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
-		super(apiKey, connection, commitment);
+		this.bagsApiClient = new BagsApiClient(apiKey);
+		this.dbcProgram = createDbcProgram(connection, commitment).program;
+		this.dammV2Program = createDammV2Program(connection, commitment).program;
+		this.bagsMeteoraFeeClaimer = createBagsMeteoraFeeClaimerProgram(connection, commitment).program;
+		this.connection = connection;
+		this.commitment = commitment;
 	}
-
 	/**
 	 * Get Bags API Client
 	 * @returns BagsApiClient
@@ -101,5 +117,28 @@ export class StateService extends BaseService {
 		});
 
 		return new PublicKey(wallet);
+	}
+
+	/**
+	 * Get pool config key for a fee claimer vault
+	 * 
+	 * WARNING: This function will assume there is only one config key for a fee claimer vault
+	 * If this is used for non bags-fee-share fee claimer vault, or the same fee claimer vault has multiple configs, it will return the first config key found
+	 * 
+	 * @param feeClaimerVault The public key of the fee claimer vault
+	 * @returns The pool config public key
+	 */
+	async getPoolConfigKeysByFeeClaimerVaults(feeClaimerVaults: Array<PublicKey>): Promise<Array<PublicKey>> { 
+		const response = await this.bagsApiClient.post<GetPoolConfigKeyByFeeClaimerVaultApiResponse>('/token-launch/state/pool-config', {
+			feeClaimerVaults: feeClaimerVaults.map((vault) => vault.toBase58()),
+		}, {
+			// 3 minutes timeout, this EP could take very long when first ran assuming there are a lot of configs
+			// EP will be cached after first run
+			timeout: 180 * 1000
+		});
+
+		const configKeys = response.poolConfigKeys.map((key) => new PublicKey(key));
+
+		return configKeys;
 	}
 }
