@@ -15,16 +15,19 @@ export class FeesService extends BaseService {
 	 * Get claimable positions for a wallet
 	 *
 	 * @param wallet The public key of the wallet to check
+	 * @param chunkSize The number of GPA calls to make in parallel, default is 5 (adjust based on your RPC rate limits)
 	 * @returns Array of claimable positions with fee information
 	 */
-	async getAllClaimablePositions(wallet: PublicKey): Promise<Array<MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault>> {
+	async getAllClaimablePositions(wallet: PublicKey, chunkSize: number = 5): Promise<Array<MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault>> {
 		const response = await getMyMeteoraTokenLaunchesAndFees(
 			wallet.toBase58(),
 			this.dbcProgram,
 			this.dammV2Program,
 			this.bagsMeteoraFeeClaimer,
 			this.commitment,
-			this.connection
+			this.connection,
+			(feeClaimerVaults: Array<PublicKey>) => this.stateService.getPoolConfigKeysByFeeClaimerVaults(feeClaimerVaults),
+			chunkSize
 		);
 		return response;
 	}

@@ -36,3 +36,7 @@ interface ClaimTransactionResult {
 }
 
 export type ClaimTransactionApiResponse = Array<ClaimTransactionResult>;
+
+export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
+	poolConfigKeys: Array<string>;
+};
