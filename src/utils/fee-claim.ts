@@ -1,14 +1,15 @@
 import { Commitment, Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { derivePositionAddress, getUnClaimReward } from '@meteora-ag/cp-amm-sdk';
 import { Program, ProgramAccount } from '@coral-xyz/anchor';
-import { PoolConfig, VirtualPool } from '@meteora-ag/dynamic-bonding-curve-sdk';
+import { VirtualPool } from '@meteora-ag/dynamic-bonding-curve-sdk';
 import { AccountLayout, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import type { BagsMeteoraFeeClaimer } from '../idl/bags-meteora-fee-claimer/idl';
 import type { DynamicBondingCurve } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 } from '../idl/damm-v2/idl';
 import { CustomFeeVault, DammV2PositionByPool, MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault } from '../types/meteora';
 import BN from 'bn.js';
-import { BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED, BAGS_METEORA_FEE_CLAIMER_VAULT_RENT_EXCEMPT_AMOUNT, METEORA_DBC_MIGRATION_DAMM_V2_CREATOR } from '../constants';
+import { BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED, BAGS_METEORA_FEE_CLAIMER_VAULT_RENT_EXCEMPT_AMOUNT, METEORA_DBC_MIGRATION_DAMM_V2_CREATOR, WRAPPED_SOL_MINT } from '../constants';
+import { deriveDbcVirtualPool } from './helpers';
 
 export async function getFeeVaultFromVaultAuthorityAndClaimer(
 	vaultAuthority: string,
@@ -477,69 +478,34 @@ const mergeMeteoraLaunches = (launches: Array<MeteoraDbcClaimablePositionWithOrW
 	return Array.from(mergedMap.values());
 };
 
-export async function getMyMeteoraTokenLaunchesAndFees(
-	creator: string,
-	meteoraDbcProgram: Program<DynamicBondingCurve>,
-	dammV2Program: Program<DammV2>,
-	bagsMeteoraFeeClaimerProgram: Program<BagsMeteoraFeeClaimer>,
-	commitment: Commitment,
-	connection: Connection,
-	getPoolConfigKeysByFeeClaimerVaults: (feeClaimerVaults: Array<PublicKey>) => Promise<Array<PublicKey>>,
-	chunkSize: number = 5
-): Promise<Array<MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault>> {
-	if (!creator || creator.length === 0) {
-		throw new Error('Creator is required');
-	}
+export function getFeeVaultPda(feeClaimer: PublicKey, baseMint: PublicKey, programId: PublicKey): PublicKey {
+	return PublicKey.findProgramAddressSync([Buffer.from(BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED), feeClaimer.toBuffer(), baseMint.toBuffer()], programId)[0];
+}
 
-	try {
-		const allConfigKeysForUser: Array<PublicKey> = [];
+export async function getVirtualPoolsCreatedByCreator(meteoraDbcProgram: Program<DynamicBondingCurve>, creator: string, chunkSize: number = 3): Promise<ProgramAccount<VirtualPool>[]> {
+	const configKeysCreatedByCreator: Array<PublicKey> = [];
 
-		const [configsCreatedDirectlyByUser, feeVaultsForUserAsA, feeVaultsForUserAsB] = await Promise.all([
-			meteoraDbcProgram.account.poolConfig.all([
-				{
-					memcmp: {
-						// fee_claimer account
-						offset: 40,
-						bytes: creator,
-					},
-				},
-			]),
-			bagsMeteoraFeeClaimerProgram.account.feeAuthority.all([
-				{
-					memcmp: {
-						// claimer_a
-						offset: 8,
-						bytes: creator,
-					},
-				},
-			]),
-			bagsMeteoraFeeClaimerProgram.account.feeAuthority.all([
-				{
-					memcmp: {
-						// claimer_b
-						offset: 40,
-						bytes: creator,
-					},
-				},
-			])
-		]);
+	const configsCreatedDirectlyByUser = await meteoraDbcProgram.account.poolConfig.all([
+		{
+			memcmp: {
+				// fee_claimer account
+				offset: 40,
+				bytes: creator,
+			},
+		},
+	]);
 
-		const feeVaults = [...feeVaultsForUserAsA, ...feeVaultsForUserAsB];
-		const feeVaultTokenMints = [...feeVaults.map((vault) => vault.account.mint.toBase58())];
-		const allFeeVaultKeys = [...feeVaults.map((vault) => vault.publicKey)];
+	configKeysCreatedByCreator.push(...configsCreatedDirectlyByUser.map((config) => config.publicKey));
 
-		const configKeysForFeeVaults = await getPoolConfigKeysByFeeClaimerVaults(allFeeVaultKeys);
+	const allVirtualPools = [];
 
-		allConfigKeysForUser.push(...configsCreatedDirectlyByUser.map((config) => config.publicKey), ...configKeysForFeeVaults);
+	const configChunks = Array.from({ length: Math.ceil(configKeysCreatedByCreator.length / chunkSize) }, (_, i) =>
+		configKeysCreatedByCreator.slice(i * chunkSize, (i + 1) * chunkSize)
+	);
 
-		const allVirtualPools = [];
-	
-		const configChunks = Array.from({ length: Math.ceil(allConfigKeysForUser.length / chunkSize) }, (_, i) => 
-			allConfigKeysForUser.slice(i * chunkSize, (i + 1) * chunkSize)
-		);
-
-		for (const chunk of configChunks) {
-			const chunkResults = await Promise.all(chunk.map(config => 
+	for (const chunk of configChunks) {
+		const chunkResults = await Promise.all(
+			chunk.map((config) =>
 				meteoraDbcProgram.account.virtualPool.all([
 					{
 						memcmp: {
@@ -549,34 +515,122 @@ export async function getMyMeteoraTokenLaunchesAndFees(
 						},
 					},
 				])
-			));
-			
-			allVirtualPools.push(...chunkResults);
-		}
+			)
+		);
 
-		const virtualPools = allVirtualPools.flat();
+		allVirtualPools.push(...chunkResults);
+	}
+
+	const virtualPools = allVirtualPools.flat();
+
+	return virtualPools;
+}
+
+export async function getFeeClaimerData(
+	creator: string,
+	bagsMeteoraFeeClaimerProgram: Program<BagsMeteoraFeeClaimer>,
+	meteoraDbcProgram: Program<DynamicBondingCurve>,
+	getPoolConfigKeysByFeeClaimerVaults: (feeClaimerVaults: Array<PublicKey>) => Promise<Array<PublicKey>>,
+): Promise<{
+	pools: ProgramAccount<VirtualPool>[];
+	feeVaultTokenMints: string[];
+	feeVaultsForUserAsA: ProgramAccount<CustomFeeVault>[];
+	feeVaultsForUserAsB: ProgramAccount<CustomFeeVault>[];
+}> {
+	const [feeVaultsForUserAsA, feeVaultsForUserAsB] = await Promise.all([
+		bagsMeteoraFeeClaimerProgram.account.feeAuthority.all([
+			{
+				memcmp: {
+					// claimer_a
+					offset: 8,
+					bytes: creator,
+				},
+			},
+		]),
+		bagsMeteoraFeeClaimerProgram.account.feeAuthority.all([
+			{
+				memcmp: {
+					// claimer_b
+					offset: 40,
+					bytes: creator,
+				},
+			},
+		]),
+	]);
+
+	const allFeeVaults = [...feeVaultsForUserAsA, ...feeVaultsForUserAsB];
+	const feeVaultTokenMints = allFeeVaults.map((vault) => vault.account.mint.toBase58());
+	const configKeysForFeeVaults = await getPoolConfigKeysByFeeClaimerVaults(allFeeVaults.map((vault) => vault.publicKey));
+
+	const virtualPoolKeys: PublicKey[] = [];
+
+	for (let i = 0; i < allFeeVaults.length; i++) {
+		const feeVault = allFeeVaults[i];
+		const configKey = configKeysForFeeVaults[i];
+		const baseMint = feeVault.account.mint;
+		const quoteMint = new PublicKey(WRAPPED_SOL_MINT);
+
+		const virtualPoolKey = deriveDbcVirtualPool(configKey, baseMint, quoteMint, meteoraDbcProgram.programId);
+
+		virtualPoolKeys.push(virtualPoolKey);
+	}
+
+	// Chunk the virtual pool keys into chunks of 50 and then chunk the chunks into chunks of chunkSize
+	const chunkedVirtualPoolKeys = Array.from({ length: Math.ceil(virtualPoolKeys.length / 50) }, (_, i) => virtualPoolKeys.slice(i * 50, (i + 1) * 50));
+
+	const allVirtualPools: ProgramAccount<VirtualPool>[] = [];
+
+	for (const chunk of chunkedVirtualPoolKeys) {
+		const result = await meteoraDbcProgram.account.virtualPool.fetchMultiple(chunk, 'processed');
+
+		for (let i = 0; i < result.length; i++) {
+			const virtualPool = result[i];
+			const virtualPoolKey = chunk[i];
+
+			if (virtualPool) {
+				allVirtualPools.push({
+					publicKey: virtualPoolKey,
+					account: virtualPool,
+				});
+			}
+		}
+	}
+
+	return {
+		pools: allVirtualPools,
+		feeVaultTokenMints: feeVaultTokenMints,
+		feeVaultsForUserAsA: feeVaultsForUserAsA,
+		feeVaultsForUserAsB: feeVaultsForUserAsB,
+	};
+}
+
+export async function getMyMeteoraTokenLaunchesAndFees(
+	creator: string,
+	meteoraDbcProgram: Program<DynamicBondingCurve>,
+	dammV2Program: Program<DammV2>,
+	bagsMeteoraFeeClaimerProgram: Program<BagsMeteoraFeeClaimer>,
+	commitment: Commitment,
+	connection: Connection,
+	getPoolConfigKeysByFeeClaimerVaults: (feeClaimerVaults: Array<PublicKey>) => Promise<Array<PublicKey>>,
+	chunkSize: number = 5
+): Promise<MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault[]> {
+	if (!creator || creator.length === 0) {
+		throw new Error('Creator is required');
+	}
+
+	try {
+		const virtualPools: ProgramAccount<VirtualPool>[] = [];
+
+		const virtualPoolsDirectlyCreatedByCreator = await getVirtualPoolsCreatedByCreator(meteoraDbcProgram, creator, chunkSize);
+		virtualPools.push(...virtualPoolsDirectlyCreatedByCreator);
+
+		const { pools: virtualPoolsCreatedByFeeVaults, feeVaultTokenMints, feeVaultsForUserAsA, feeVaultsForUserAsB } = await getFeeClaimerData(creator, bagsMeteoraFeeClaimerProgram, meteoraDbcProgram, getPoolConfigKeysByFeeClaimerVaults);
+		virtualPools.push(...virtualPoolsCreatedByFeeVaults);
 
 		const chunkedPools = Array.from({ length: Math.ceil(virtualPools.length / chunkSize) }, (_, i) => virtualPools.slice(i * chunkSize, (i + 1) * chunkSize));
-		
+
 		const chunkResults = await Promise.all(
-			chunkedPools.map((chunk) =>
-				Promise.all(
-					chunk.map((pool) =>
-						processVirtualPool(
-							pool,
-							creator,
-							feeVaultTokenMints,
-							feeVaultsForUserAsA,
-							feeVaultsForUserAsB,
-							meteoraDbcProgram,
-							bagsMeteoraFeeClaimerProgram,
-							dammV2Program,
-							commitment,
-							connection
-						)
-					)
-				)
-			)
+			chunkedPools.map((chunk) => Promise.all(chunk.map((pool) => processVirtualPool(pool, creator, feeVaultTokenMints, feeVaultsForUserAsA, feeVaultsForUserAsB, meteoraDbcProgram, bagsMeteoraFeeClaimerProgram, dammV2Program, commitment, connection))))
 		);
 
 		const results = chunkResults
@@ -591,8 +645,4 @@ export async function getMyMeteoraTokenLaunchesAndFees(
 		console.error('Error fetching Meteora virtual pools:', error);
 		throw error;
 	}
-}
-
-export function getFeeVaultPda(feeClaimer: PublicKey, baseMint: PublicKey, programId: PublicKey): PublicKey {
-	return PublicKey.findProgramAddressSync([Buffer.from(BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED), feeClaimer.toBuffer(), baseMint.toBuffer()], programId)[0];
 }
