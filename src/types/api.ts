@@ -22,14 +22,6 @@ export interface FeeShareTransactionConfigApiResponse {
 	configKey: string;
 }
 
-export interface TokenLaunchCreator {
-	username: string;
-	pfp: string;
-	twitterUsername: string | null;
-	royaltyBps: number;
-	isCreator: boolean;
-}
-
 interface ClaimTransactionResult {
 	tx: string;
 	blockhash: BlockhashWithExpiryBlockHeight;
@@ -40,3 +32,17 @@ export type ClaimTransactionApiResponse = Array<ClaimTransactionResult>;
 export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
 	poolConfigKeys: Array<string>;
 };
+
+export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github'] as const;
+
+export type SocialProvider = (typeof VALID_SOCIAL_PROVIDERS)[number];
+
+export interface TokenLaunchCreator {
+	username: string;
+	pfp: string;
+	royaltyBps: number;
+	isCreator: boolean;
+	wallet: string;
+	provider: SocialProvider | 'unknown' | null;
+	providerUsername: string | null;
+}
