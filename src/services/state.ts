@@ -94,7 +94,7 @@ export class StateService {
 	 * @returns The creators
 	 */
 	async getTokenCreators(tokenMint: PublicKey): Promise<Array<TokenLaunchCreator>> {
-		const creators = await this.bagsApiClient.get<Array<TokenLaunchCreator>>('/token-launch/creator/v2', {
+		const creators = await this.bagsApiClient.get<Array<TokenLaunchCreator>>('/token-launch/creator/v3', {
 			params: {
 				tokenMint: tokenMint.toBase58(),
 			},
