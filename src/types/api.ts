@@ -1,4 +1,4 @@
-import { BlockhashWithExpiryBlockHeight } from '@solana/web3.js';
+import type { BlockhashWithExpiryBlockHeight } from '@solana/web3.js';
 
 type BagsSuccessApiResponse<T> = {
 	success: true;
@@ -34,8 +34,10 @@ export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
 };
 
 export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github'] as const;
+export const SUPPORTED_LAUNCH_SOCIAL_PROVIDERS = ['twitter', 'tiktok', 'kick', 'github'] as const;
 
 export type SocialProvider = (typeof VALID_SOCIAL_PROVIDERS)[number];
+export type SupportedSocialProvider = (typeof SUPPORTED_LAUNCH_SOCIAL_PROVIDERS)[number];
 
 export interface TokenLaunchCreator {
 	username: string;
