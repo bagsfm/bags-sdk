@@ -1,4 +1,4 @@
-import type { BlockhashWithExpiryBlockHeight } from '@solana/web3.js';
+import type { BlockhashWithExpiryBlockHeight, PublicKey } from '@solana/web3.js';
 
 type BagsSuccessApiResponse<T> = {
 	success: true;
@@ -48,3 +48,20 @@ export interface TokenLaunchCreator {
 	provider: SocialProvider | 'unknown' | null;
 	providerUsername: string | null;
 }
+
+export interface BagsSocialProviderUserData {
+	id: string;
+	username: string;
+	display_name: string;
+	avatar_url: string;
+}
+
+export type BagsGetFeeShareWalletV2Response<WalletType = string> = {
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData;
+	wallet: WalletType;
+};
+
+export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2Response<PublicKey>;
+
+export type BagsGetFeeShareWalletV2ApiResponse = BagsApiResponse<BagsGetFeeShareWalletV2Response>;
