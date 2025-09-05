@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package restream_events;
+
+// swap:{token}
+message DexSwapEvent {
+  // The maker's address
+  string maker = 1;
+
+  // Transaction signature
+  string signature = 2;
+
+  // `From` token address
+  string from_token = 3;
+
+  // `To` token address
+  string to_token = 4;
+
+  // `From` token decimals
+  uint32 from_decimals = 5;
+
+  // `To` token decimals
+  uint32 to_decimals = 6;
+
+  // `From` token amount in base units
+  uint64 from_amount = 7;
+
+  // `To` token amount in base units
+  uint64 to_amount = 8;
+
+  // `From` token price in USD
+  double from_price_usd = 10;
+
+  // `To` token price in USD
+  double to_price_usd = 11;
+
+  // `From` token price in SOL
+  double from_price_sol = 12;
+
+  // `To` token price in SOL
+  double to_price_sol = 13;
+
+  // `From` token product in USD (volume)
+  double from_product_usd = 14;
+
+  // `To` token product in USD (volume)
+  double to_product_usd = 15;
+
+  // `From` token product in SOL (volume)
+  double from_product_sol = 16;
+
+  // `To` token product in SOL (volume)
+  double to_product_sol = 17;
+
+  // DEX address
+  string dex = 18;
+
+  // Block slot number
+  uint64 slot = 19;
+
+  // unix timestamp (seconds)
+  int64 timestamp = 20;
+}

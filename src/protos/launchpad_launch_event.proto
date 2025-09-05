@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package restream_events;
+
+enum SupportedLaunchpadEvent {
+  UNKNOWN = 0;
+  BAGS = 1;
+}
+
+// launchpad_launch:{<launchpad> in SCREAMING_SNAKE_CASE}
+message LaunchpadLaunchEvent {
+  // unix timestamp (seconds)
+  int64 timestamp = 1;
+
+  // txn signature of the event
+  string signature = 2;
+
+  // slot of the event
+  uint64 slot = 3;
+
+  // creator of the launch
+  string creator = 4;
+
+  // mint of the launch
+  string mint = 5;
+
+  // quote of the launch in the virtual curve
+  string quote = 6;
+
+  // name of the mint
+  string name = 7;
+
+  // symbol of the mint
+  string symbol = 8;
+
+  // uri of the mint
+  string uri = 9;
+
+  // launch wallet of the launch - could be empty string if no launch wallet was
+  // inferred
+  string launch_wallet = 10;
+
+  // launchpad where the launch was created
+  SupportedLaunchpadEvent launchpad = 11;
+}
