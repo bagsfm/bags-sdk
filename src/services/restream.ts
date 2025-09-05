@@ -495,7 +495,7 @@ export class RestreamClient extends EventEmitter {
 
 			// Prefix format: "topic:subject;" then varint_len + protobuf_payload
 			const sep = buf.indexOf(';'.charCodeAt(0));
-			if (sep < 0) return;
+			if (sep < 0) return; // Drop frame
 
 			const channel = buf.subarray(0, sep).toString('utf8');
 			const rest = buf.subarray(sep + 1); // varint_len + protobuf
@@ -505,11 +505,13 @@ export class RestreamClient extends EventEmitter {
 			let bytesRead = 0;
 			try {
 				({ value: bodyLen, bytesRead } = this.readUVarint(rest));
-			} catch {
-				this.logError('Varint read error', { channel });
+			} catch (error: unknown) {
+				this.logError('Varint read error', { channel, error });
+				return; // Drop frame on varint parse error
 			}
 			if (bodyLen < 0 || bytesRead + bodyLen > rest.length) {
 				this.logError('Invalid body length', { channel, bodyLen, bytesRead, restLen: rest.length });
+				return; // Drop frame on length inconsistency
 			}
 			const payload = rest.subarray(bytesRead, bytesRead + bodyLen);
 
@@ -521,8 +523,9 @@ export class RestreamClient extends EventEmitter {
 			if (decoder) {
 				try {
 					decoded = decoder(payload);
-				} catch {
-					this.logError('Decoder error', { topic, subject, channel });
+				} catch (error: unknown) {
+					this.logError('Decoder error', { topic, subject, channel, error });
+					return; // Decoder failure: drop the message silently
 				}
 			} else {
 				decoded = payload;
@@ -536,9 +539,10 @@ export class RestreamClient extends EventEmitter {
 					delivered.add(handler);
 					try {
 						handler(decoded, { topic, subject, channel });
-					} catch (error: unknown) {
-						this.logError('Handler error', { topic, subject, channel, error });
-						this.emit('handler_error', error);
+					} catch (e) {
+						// Surface handler errors (user code)
+						this.logError('Handler error', { topic, subject, channel, error: e });
+						this.emit('handler_error', e);
 					}
 				}
 			}
@@ -552,9 +556,9 @@ export class RestreamClient extends EventEmitter {
 						if (delivered.has(handler)) continue;
 						try {
 							handler(decoded, { topic, subject, channel });
-						} catch (e) {
-							this.logError('Handler error', { topic, subject, channel, wildcard: true });
-							this.emit('handler_error', e);
+						} catch (error: unknown) {
+							this.logError('Handler error', { topic, subject, channel, wildcard: true, error });
+							this.emit('handler_error', error);
 						}
 					}
 				}
@@ -568,7 +572,8 @@ export class RestreamClient extends EventEmitter {
 				payload,
 				decoded,
 			});
-		} catch {
+		} catch (error: unknown) {
+			this.logError('Fatal onMessage error', { error });
 			// Fully silent on other processing failures
 		}
 	}
@@ -690,7 +695,7 @@ export class RestreamClient extends EventEmitter {
 			this.ws.send(JSON.stringify({ type: 'subscribe', event: channel }));
 			this.emit('subscribed', { channel });
 		} catch (e) {
-			this.emit('error', e);
+			this.emit('error', e); // Safe due to default no-op listener
 		}
 	}
 
@@ -700,7 +705,7 @@ export class RestreamClient extends EventEmitter {
 			this.ws.send(JSON.stringify({ type: 'unsubscribe', event: channel }));
 			this.emit('unsubscribed', { channel });
 		} catch (e) {
-			this.emit('error', e);
+			this.emit('error', e); // Safe due to default no-op listener
 		}
 	}
 
@@ -756,11 +761,12 @@ export class RestreamClient extends EventEmitter {
 		return Buffer.from(data);
 	}
 
-	private logError(message: string, context?: any): void {
-		if (context) {
-			console.error(`[RestreamClient] ${message}`, context);
-		} else {
-			console.error(`[RestreamClient] ${message}`);
-		}
+	// We'll just emit an event for observability.
+	private logError(message: string, context: Record<string, unknown>): void {
+		this.emit('client_error', {
+			message,
+			context,
+			timestamp: new Date().toISOString(),
+		});
 	}
 }
