@@ -536,9 +536,9 @@ export class RestreamClient extends EventEmitter {
 					delivered.add(handler);
 					try {
 						handler(decoded, { topic, subject, channel });
-					} catch (e) {
-						this.logError('Handler error', { topic, subject, channel, error: e });
-						this.emit('handler_error', e);
+					} catch (error: unknown) {
+						this.logError('Handler error', { topic, subject, channel, error });
+						this.emit('handler_error', error);
 					}
 				}
 			}
@@ -607,8 +607,8 @@ export class RestreamClient extends EventEmitter {
 			try {
 				this.ws.send(JSON.stringify({ type: 'ping' }));
 				this.emit('ping');
-			} catch (e) {
-				this.emit('error', e);
+			} catch (error: unknown) {
+				this.emit('error', error);
 			}
 		}, this.pingIntervalMs);
 	}
