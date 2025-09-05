@@ -539,10 +539,10 @@ export class RestreamClient extends EventEmitter {
 					delivered.add(handler);
 					try {
 						handler(decoded, { topic, subject, channel });
-					} catch (e) {
+					} catch (error: unknown) {
 						// Surface handler errors (user code)
-						this.logError('Handler error', { topic, subject, channel, error: e });
-						this.emit('handler_error', e);
+						this.logError('Handler error', { topic, subject, channel, error });
+						this.emit('handler_error', error);
 					}
 				}
 			}
@@ -613,7 +613,7 @@ export class RestreamClient extends EventEmitter {
 				this.ws.send(JSON.stringify({ type: 'ping' }));
 				this.emit('ping');
 			} catch (error: unknown) {
-				this.logError('Subscribe send error', { error });
+				this.logError('Ping error', { error });
 			}
 		}, this.pingIntervalMs);
 	}
@@ -705,7 +705,7 @@ export class RestreamClient extends EventEmitter {
 			this.ws.send(JSON.stringify({ type: 'unsubscribe', event: channel }));
 			this.emit('unsubscribed', { channel });
 		} catch (error) {
-			this.logError('Subscribe send error', { channel, error });
+			this.logError('Unsubscribe send error', { channel, error });
 		}
 	}
 
