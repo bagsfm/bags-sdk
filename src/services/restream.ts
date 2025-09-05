@@ -93,6 +93,9 @@ export class RestreamClient extends EventEmitter {
 	constructor(opts: ReStreamClientOptions = DEFAULT_RESTREAM_CLIENT_OPTS) {
 		super();
 
+		// Prevent unhandled 'error' events from crashing the process
+		this.on('error', () => {});
+
 		this.apiKey = opts.apiKey;
 		this.endpoint = opts.endpoint ?? DEFAULT_RESTREAM_URL;
 		this.pingIntervalMs = opts.pingIntervalMs ?? DEFAULT_RESTREAM_PING_INTERVAL_MS;
@@ -119,14 +122,14 @@ export class RestreamClient extends EventEmitter {
 	 * - Emits `error` event on connection or protocol errors.
 	 *
 	 * The call will time out and reject if the connection is not established
-	 * within `timeoutMs` (default 10s).
+	 * within `connectTimeoutMs`.
 	 *
 	 * @returns Promise that resolves when connected.
 	 * @throws If connection fails or times out.
 	 *
 	 * @example
 	 * const client = new RestreamClient();
-	 * await client.connect(8000); // 8s timeout
+	 * await client.connect();
 	 * client.on('open', () => {
 	 *   console.log('Connected to RestreamClient');
 	 * });
@@ -134,71 +137,47 @@ export class RestreamClient extends EventEmitter {
 	public async connect(): Promise<void> {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) return;
 
+		this.shouldReconnect = true;
 		const url = this.buildUrl();
 		const timeout = this.connectTimeoutMs;
 
 		return new Promise<void>((resolve, reject) => {
 			const ws = new WebSocket(url);
-			this.ws = ws;
 
 			let settled = false;
-			let timer: NodeJS.Timeout;
+			const timer = setTimeout(() => {
+				onErrorOnce(new Error(`WebSocket connect timeout after ${timeout}ms`));
+			}, timeout);
 
-			const finish = (fn: () => void) => {
+			const onOpenOnce = () => {
 				if (settled) return;
 				settled = true;
-				try {
-					fn();
-				} catch {
-					// swallow any shutdown-time errors
-				}
+				clearTimeout(timer);
+				ws.removeListener('error', onErrorOnce);
+
+				this.ws = ws;
+				this.attachPersistentListeners(ws);
+				this.onOpen();
+				resolve();
 			};
 
-			const onOpenOnce = () =>
-				finish(() => {
-					clearTimeout(timer);
-					ws.off('error', onErrorOnce);
-					// Keep message/close listeners for lifecycle
-					this.onOpen();
-					resolve();
-				});
+			const onErrorOnce = (err: Error) => {
+				if (settled) return;
+				settled = true;
+				clearTimeout(timer);
+				ws.removeListener('open', onOpenOnce);
 
-			const onErrorOnce = (err: Error) =>
-				finish(() => {
-					clearTimeout(timer);
-					ws.off('open', onOpenOnce);
-					// Remove listeners to avoid leaks on failed attempt
-					try {
-						ws.removeAllListeners();
-					} catch {
-						// ignore
-					}
-					try {
-						ws.terminate();
-					} catch {
-						// ignore
-					}
-					this.ws = null;
-					reject(err);
-				});
+				try {
+					ws.terminate();
+				} catch {
+					// ignore
+				}
+				this.ws = null;
+				reject(err);
+			};
 
 			ws.once('open', onOpenOnce);
 			ws.once('error', onErrorOnce);
-
-			// Persistent lifecycle listeners
-			ws.on('message', (data) => {
-				try {
-					this.onMessage(data);
-				} catch {
-					// Fully silent on processing/decoding failures
-				}
-			});
-			ws.on('close', (code, reason) => this.onClose(code, Buffer.from(reason)));
-
-			// Connection timeout
-			timer = setTimeout(() => {
-				onErrorOnce(new Error(`WebSocket connect timeout after ${timeout}ms`));
-			}, timeout);
 		});
 	}
 
@@ -231,16 +210,24 @@ export class RestreamClient extends EventEmitter {
 		const ws = this.ws;
 		if (!ws) return;
 
-		await new Promise<void>((resolve) => {
-			ws.once('close', () => resolve());
+		return new Promise<void>((resolve) => {
+			if (ws.readyState === WebSocket.CLOSED) {
+				this.ws = null;
+				return resolve();
+			}
+
+			ws.once('close', () => {
+				this.ws = null;
+				resolve();
+			});
+
 			try {
 				ws.close(code, reason);
 			} catch {
+				this.ws = null;
 				resolve();
 			}
 		});
-
-		this.ws = null;
 	}
 
 	/**
@@ -432,6 +419,12 @@ export class RestreamClient extends EventEmitter {
 
 	/** --- Internals --- **/
 
+	private attachPersistentListeners(ws: WebSocket): void {
+		ws.on('message', (data) => this.onMessage(data));
+		ws.on('close', (code, reason) => this.onClose(code, Buffer.from(reason)));
+		ws.on('error', (err) => this.onSocketError(err));
+	}
+
 	/**
 	 * Build the full WebSocket URL with API key if provided.
 	 */
@@ -466,9 +459,19 @@ export class RestreamClient extends EventEmitter {
 	private onClose(code: number, reason: Buffer): void {
 		this.emit('close', { code, reason: reason.toString() });
 		this.stopPing();
+		this.ws = null;
 
-		if (!this.shouldReconnect || !this.reconnectCfg.enabled) return;
-		this.scheduleReconnect();
+		if (this.shouldReconnect && this.reconnectCfg.enabled) {
+			this.scheduleReconnect();
+		}
+	}
+
+	/**
+	 * 'ws' error event (persistent)
+	 * Emits a non-fatal 'socket_error' for observation.
+	 */
+	private onSocketError(err: Error): void {
+		this.emit('socket_error', err);
 	}
 
 	/**
@@ -503,10 +506,10 @@ export class RestreamClient extends EventEmitter {
 			try {
 				({ value: bodyLen, bytesRead } = this.readUVarint(rest));
 			} catch {
-				return;
+				this.logError('Varint read error', { channel });
 			}
 			if (bodyLen < 0 || bytesRead + bodyLen > rest.length) {
-				return;
+				this.logError('Invalid body length', { channel, bodyLen, bytesRead, restLen: rest.length });
 			}
 			const payload = rest.subarray(bytesRead, bytesRead + bodyLen);
 
@@ -519,8 +522,7 @@ export class RestreamClient extends EventEmitter {
 				try {
 					decoded = decoder(payload);
 				} catch {
-					// Decoder failure: drop the message silently
-					return;
+					this.logError('Decoder error', { topic, subject, channel });
 				}
 			} else {
 				decoded = payload;
@@ -535,7 +537,7 @@ export class RestreamClient extends EventEmitter {
 					try {
 						handler(decoded, { topic, subject, channel });
 					} catch (e) {
-						// Surface handler errors (user code)
+						this.logError('Handler error', { topic, subject, channel, error: e });
 						this.emit('handler_error', e);
 					}
 				}
@@ -551,6 +553,7 @@ export class RestreamClient extends EventEmitter {
 						try {
 							handler(decoded, { topic, subject, channel });
 						} catch (e) {
+							this.logError('Handler error', { topic, subject, channel, wildcard: true });
 							this.emit('handler_error', e);
 						}
 					}
@@ -566,7 +569,7 @@ export class RestreamClient extends EventEmitter {
 				decoded,
 			});
 		} catch {
-			// Fully silent on processing failures
+			// Fully silent on other processing failures
 		}
 	}
 
@@ -627,6 +630,8 @@ export class RestreamClient extends EventEmitter {
 	}
 
 	private scheduleReconnect(): void {
+		if (this.reconnectTimer) return; // Already scheduled
+
 		const { maxDelayMs, factor, jitter } = this.reconnectCfg;
 		const base = Math.min(this.reconnect.nextDelayMs, maxDelayMs);
 		const jitterAmt = base * (jitter ?? 0.2) * (Math.random() - 0.5) * 2;
@@ -638,6 +643,7 @@ export class RestreamClient extends EventEmitter {
 		});
 
 		this.reconnectTimer = setTimeout(async () => {
+			this.reconnectTimer = null; // Timer has fired
 			this.reconnect.attempts += 1;
 			this.reconnect.nextDelayMs = Math.min(Math.floor(this.reconnect.nextDelayMs * (factor ?? 1.8)), maxDelayMs);
 
@@ -645,8 +651,8 @@ export class RestreamClient extends EventEmitter {
 				await this.connect();
 				this.emit('reconnected', { attempts: this.reconnect.attempts });
 			} catch (e) {
-				this.emit('error', e);
-				this.scheduleReconnect();
+				this.emit('reconnect_error', e);
+				this.scheduleReconnect(); // Try again
 			}
 		}, delay);
 	}
@@ -748,5 +754,13 @@ export class RestreamClient extends EventEmitter {
 		if (data instanceof ArrayBuffer) return Buffer.from(data);
 		// Fallback (handles ArrayBufferView as well)
 		return Buffer.from(data);
+	}
+
+	private logError(message: string, context?: any): void {
+		if (context) {
+			console.error(`[RestreamClient] ${message}`, context);
+		} else {
+			console.error(`[RestreamClient] ${message}`);
+		}
 	}
 }

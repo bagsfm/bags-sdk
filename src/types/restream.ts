@@ -102,7 +102,7 @@ export interface RestreamReconnectState {
 
 export type RestreamDecoderFn = (payload: Uint8Array) => unknown;
 
-export interface ReStreamDecoders {
+export type ReStreamDecoders = Record<RestreamKnownTopics, RestreamDecoderFn> & {
 	// Keyed by topic. Example: { launchpad_launch: (bytes) => LaunchpadLaunchEvent.decode(bytes) }
 	[topic: string]: RestreamDecoderFn;
-}
+};
