@@ -613,7 +613,7 @@ export class RestreamClient extends EventEmitter {
 				this.ws.send(JSON.stringify({ type: 'ping' }));
 				this.emit('ping');
 			} catch (error: unknown) {
-				this.emit('error', error);
+				this.logError('Subscribe send error', { error });
 			}
 		}, this.pingIntervalMs);
 	}
@@ -655,8 +655,8 @@ export class RestreamClient extends EventEmitter {
 			try {
 				await this.connect();
 				this.emit('reconnected', { attempts: this.reconnect.attempts });
-			} catch (e) {
-				this.emit('reconnect_error', e);
+			} catch (error: unknown) {
+				this.emit('reconnect_error', error);
 				this.scheduleReconnect(); // Try again
 			}
 		}, delay);
@@ -694,8 +694,8 @@ export class RestreamClient extends EventEmitter {
 		try {
 			this.ws.send(JSON.stringify({ type: 'subscribe', event: channel }));
 			this.emit('subscribed', { channel });
-		} catch (e) {
-			this.emit('error', e); // Safe due to default no-op listener
+		} catch (error) {
+			this.logError('Subscribe send error', { channel, error });
 		}
 	}
 
@@ -704,8 +704,8 @@ export class RestreamClient extends EventEmitter {
 		try {
 			this.ws.send(JSON.stringify({ type: 'unsubscribe', event: channel }));
 			this.emit('unsubscribed', { channel });
-		} catch (e) {
-			this.emit('error', e); // Safe due to default no-op listener
+		} catch (error) {
+			this.logError('Subscribe send error', { channel, error });
 		}
 	}
 
