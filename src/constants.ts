@@ -32,4 +32,4 @@ export const DEFAULT_RESTREAM_CLIENT_OPTS: ReStreamClientOptions = {
 	maxWildcardSubscriptions: DEFAULT_RESTREAM_MAX_WILDCARD_SUBS,
 	connectTimeoutMs: DEFAULT_RESTREAM_CONNECT_TIMEOUT_MS,
 };
-export const RESTREAM_KNOWN_EVENTS = ['launchpad_launch', 'maker_action', 'price', 'swap'] as const;
+export const RESTREAM_KNOWN_EVENTS = ['launchpad_launch'] as const;

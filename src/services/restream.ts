@@ -22,10 +22,6 @@ import WebSocket from 'ws';
 import EventEmitter from 'node:events';
 import { DEFAULT_RESTREAM_DECODERS } from '../utils/restream-decoders';
 import { type LaunchpadLaunchEvent, SupportedLaunchpadEvent, supportedLaunchpadEventToJSON } from '../generated/restream/src/protos/launchpad_launch_event';
-import type { DexSwapEvent } from '../generated/restream/src/protos/swap_event';
-import type { DexPriceEvent } from '../generated/restream/src/protos/price_event';
-import type { MakerActionEvent } from '../generated/restream/src/protos/maker_action_event';
-import { PublicKey } from '@solana/web3.js';
 
 /**
  * A full-fledged, highly configurable WebSocket client for Restream that
@@ -288,63 +284,6 @@ export class RestreamClient extends EventEmitter {
 	 */
 	public subscribeBagsLaunches(handler: RestreamSubscriptionHandler<LaunchpadLaunchEvent>): () => void {
 		return this.subscribeLaunchpadLaunch(SupportedLaunchpadEvent.BAGS, handler);
-	}
-
-	/**
-	 * Subscribe to swap events for a specific token address.
-	 * Returns an unsubscribe function to remove the handler.
-	 *
-	 * @param tokenAddress - The base58 token address to subscribe to
-	 * @param handler - Callback invoked with decoded message and metadata
-	 * @returns Function to unsubscribe the handler
-	 */
-	public subscribeTokenSwaps<T = DexSwapEvent>(tokenAddress: string | PublicKey, handler: RestreamSubscriptionHandler<T>): (() => void) | null {
-		try {
-			const address = new PublicKey(tokenAddress);
-			const channel = `swap:${address.toBase58()}`;
-			return this.subscribe(channel, handler);
-		} catch {
-			return null;
-		}
-	}
-
-	/**
-	 * Subscribe to price events for a specific token address.
-	 * Returns an unsubscribe function to remove the handler.
-	 *
-	 * **NOTE**: Doesn't support wildcard subscriptions.
-	 *
-	 * @param tokenAddress - The base58 token address to subscribe to (can be PublicKey)
-	 * @param handler - Callback invoked with decoded message and metadata
-	 * @returns Function to unsubscribe the handler
-	 */
-	public subscribeTokenPrice<T = DexPriceEvent>(tokenAddress: string, handler: RestreamSubscriptionHandler<T>): (() => void) | null {
-		try {
-			const address = new PublicKey(tokenAddress);
-			const channel = `price:${address.toBase58()}`;
-			return this.subscribe(channel, handler);
-		} catch {
-			return null;
-		}
-	}
-
-	/**
-	 * Subscribe to swap events for a specific trader address.
-	 *
-	 * **NOTE**: Doesn't support wildcard subscriptions.
-	 *
-	 * @param makerAddress - The base58 trader address to subscribe to (can be PublicKey)
-	 * @param handler - Callback invoked with decoded message and metadata
-	 * @returns Function to unsubscribe the handler
-	 */
-	public subscribeMakerActions<T = MakerActionEvent>(makerAddress: string, handler: RestreamSubscriptionHandler<T>): (() => void) | null {
-		try {
-			const address = new PublicKey(makerAddress);
-			const channel = `maker_action:${address.toBase58()}`;
-			return this.subscribe(channel, handler);
-		} catch {
-			return null;
-		}
 	}
 
 	/**

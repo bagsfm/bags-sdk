@@ -1,8 +1,5 @@
 import type { RESTREAM_KNOWN_EVENTS } from '../constants';
 import type { LaunchpadLaunchEvent } from '../generated/restream/src/protos/launchpad_launch_event';
-import type { MakerActionEvent } from '../generated/restream/src/protos/maker_action_event';
-import type { DexPriceEvent } from '../generated/restream/src/protos/price_event';
-import type { DexSwapEvent } from '../generated/restream/src/protos/swap_event';
 
 export type RestreamKnownTopics = (typeof RESTREAM_KNOWN_EVENTS)[number];
 export type RestreamChannel = string;
@@ -86,10 +83,7 @@ export interface RestreamSubscriptionMeta {
 }
 
 export type RestreamSubscriptionHandler<T = unknown> = (event: T, meta: RestreamSubscriptionMeta) => void;
-export type RestreamSwapSubscriptionHandler = RestreamSubscriptionHandler<DexSwapEvent>;
 export type RestreamLaunchpadLaunchSubscriptionHandler = RestreamSubscriptionHandler<LaunchpadLaunchEvent>;
-export type RestreamPriceSubscriptionHandler = RestreamSubscriptionHandler<DexPriceEvent>;
-export type RestreamMakerActionSubscriptionHandler = RestreamSubscriptionHandler<MakerActionEvent>;
 
 export interface RestreamPendingSubscribe {
 	channel: RestreamChannel;
