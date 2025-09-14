@@ -104,19 +104,25 @@ export class StateService {
 	}
 
 	/**
+	 * @deprecated Use getLaunchWalletV2 instead (this function will be removed in the future)
 	 * Get launch wallet for twitter user
 	 *
 	 * @param twitterUsername The twitter username to get the launch wallet for
 	 * @returns The launch wallet
 	 */
 	async getLaunchWalletForTwitterUsername(twitterUsername: string): Promise<PublicKey> {
-		const wallet = await this.bagsApiClient.get<string>('/token-launch/fee-share/wallet/twitter', {
+		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2ApiResponse>('/token-launch/fee-share/wallet/v2', {
 			params: {
-				twitterUsername,
+				username: twitterUsername,
+				provider: 'twitter',
 			},
 		});
 
-		return new PublicKey(wallet);
+		if (!response.success) {
+			throw new Error('Failed to get launch wallet for twitter username');
+		}
+
+		return new PublicKey(response.response.wallet);
 	}
 
 	/**
