@@ -1,5 +1,5 @@
 import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
-import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
+import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2Response, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
 import type { Program } from '@coral-xyz/anchor';
 import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
@@ -162,24 +162,17 @@ export class StateService {
 	 */
 	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider): Promise<BagsGetFeeShareWalletV2State> {
 		try {
-			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2ApiResponse>('/token-launch/fee-share/wallet/v2', {
+			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>('/token-launch/fee-share/wallet/v2', {
 				params: {
 					username,
 					provider,
 				},
 			});
 
-			if (!response.success) {
-				if ('error' in response) throw new Error(response.error);
-
-				throw new Error('Unknown error occurred');
-			}
-
-			const data = response.response;
 			return {
-				platformData: data.platformData,
-				provider: data.provider,
-				wallet: new PublicKey(data.wallet),
+				platformData: response.platformData,
+				provider: response.provider,
+				wallet: new PublicKey(response.wallet),
 			};
 		} catch (error: unknown) {
 			throw new Error(`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`);
