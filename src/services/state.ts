@@ -1,6 +1,6 @@
-import { Commitment, Connection, PublicKey } from '@solana/web3.js';
-import { GetPoolConfigKeyByFeeClaimerVaultApiResponse, TokenLaunchCreator } from '../types/api';
-import { Program } from '@coral-xyz/anchor';
+import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
+import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
+import type { Program } from '@coral-xyz/anchor';
 import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
 import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/bags-meteora-fee-claimer/idl';
@@ -104,41 +104,85 @@ export class StateService {
 	}
 
 	/**
+	 * @deprecated Use getLaunchWalletV2 instead (this function will be removed in the future)
 	 * Get launch wallet for twitter user
 	 *
 	 * @param twitterUsername The twitter username to get the launch wallet for
 	 * @returns The launch wallet
 	 */
 	async getLaunchWalletForTwitterUsername(twitterUsername: string): Promise<PublicKey> {
-		const wallet = await this.bagsApiClient.get<string>('/token-launch/fee-share/wallet/twitter', {
+		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2ApiResponse>('/token-launch/fee-share/wallet/v2', {
 			params: {
-				twitterUsername,
+				username: twitterUsername,
+				provider: 'twitter',
 			},
 		});
 
-		return new PublicKey(wallet);
+		if (!response.success) {
+			throw new Error('Failed to get launch wallet for twitter username');
+		}
+
+		return new PublicKey(response.response.wallet);
 	}
 
 	/**
 	 * Get pool config key for a fee claimer vault
-	 * 
+	 *
 	 * WARNING: This function will assume there is only one config key for a fee claimer vault
 	 * If this is used for non bags-fee-share fee claimer vault, or the same fee claimer vault has multiple configs, it will return the first config key found
-	 * 
+	 *
 	 * @param feeClaimerVault The public key of the fee claimer vault
 	 * @returns The pool config public key
 	 */
-	async getPoolConfigKeysByFeeClaimerVaults(feeClaimerVaults: Array<PublicKey>): Promise<Array<PublicKey>> { 
-		const response = await this.bagsApiClient.post<GetPoolConfigKeyByFeeClaimerVaultApiResponse>('/token-launch/state/pool-config', {
-			feeClaimerVaults: feeClaimerVaults.map((vault) => vault.toBase58()),
-		}, {
-			// 3 minutes timeout, this EP could take very long when first ran assuming there are a lot of configs
-			// EP will be cached after first run
-			timeout: 180 * 1000
-		});
+	async getPoolConfigKeysByFeeClaimerVaults(feeClaimerVaults: Array<PublicKey>): Promise<Array<PublicKey>> {
+		const response = await this.bagsApiClient.post<GetPoolConfigKeyByFeeClaimerVaultApiResponse>(
+			'/token-launch/state/pool-config',
+			{
+				feeClaimerVaults: feeClaimerVaults.map((vault) => vault.toBase58()),
+			},
+			{
+				// 3 minutes timeout, this EP could take very long when first ran assuming there are a lot of configs
+				// EP will be cached after first run
+				timeout: 180 * 1000,
+			}
+		);
 
 		const configKeys = response.poolConfigKeys.map((key) => new PublicKey(key));
 
 		return configKeys;
+	}
+
+	/**
+	 * Get launch wallet for social username
+	 *
+	 * @param username The username to get the launch wallet for
+	 * @param provider The social provider, e.g. `twitter`, `tiktok`
+	 * @returns The launch wallet
+	 * @throws Error if the request fails or the response indicates failure
+	 */
+	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider): Promise<BagsGetFeeShareWalletV2State> {
+		try {
+			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2ApiResponse>('/token-launch/fee-share/wallet/v2', {
+				params: {
+					username,
+					provider,
+				},
+			});
+
+			if (!response.success) {
+				if ('error' in response) throw new Error(response.error);
+
+				throw new Error('Unknown error occurred');
+			}
+
+			const data = response.response;
+			return {
+				platformData: data.platformData,
+				provider: data.provider,
+				wallet: new PublicKey(data.wallet),
+			};
+		} catch (error: unknown) {
+			throw new Error(`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`);
+		}
 	}
 }
