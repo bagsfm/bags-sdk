@@ -1,4 +1,4 @@
-import { BlockhashWithExpiryBlockHeight } from '@solana/web3.js';
+import type { BlockhashWithExpiryBlockHeight, PublicKey } from '@solana/web3.js';
 
 type BagsSuccessApiResponse<T> = {
 	success: true;
@@ -34,8 +34,10 @@ export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
 };
 
 export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github'] as const;
+export const SUPPORTED_LAUNCH_SOCIAL_PROVIDERS = ['twitter', 'tiktok', 'kick', 'github'] as const;
 
 export type SocialProvider = (typeof VALID_SOCIAL_PROVIDERS)[number];
+export type SupportedSocialProvider = (typeof SUPPORTED_LAUNCH_SOCIAL_PROVIDERS)[number];
 
 export interface TokenLaunchCreator {
 	username: string;
@@ -46,3 +48,20 @@ export interface TokenLaunchCreator {
 	provider: SocialProvider | 'unknown' | null;
 	providerUsername: string | null;
 }
+
+export interface BagsSocialProviderUserData {
+	id: string;
+	username: string;
+	display_name: string;
+	avatar_url: string;
+}
+
+export type BagsGetFeeShareWalletV2Response<WalletType = string> = {
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData;
+	wallet: WalletType;
+};
+
+export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2Response<PublicKey>;
+
+export type BagsGetFeeShareWalletV2ApiResponse = BagsApiResponse<BagsGetFeeShareWalletV2Response>;
