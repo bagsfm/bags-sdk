@@ -1,9 +1,10 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse, NormalizedCreateTokenInfoParams } from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
+import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
 
 export class TokenLaunchService extends BaseService {
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
@@ -38,31 +39,46 @@ export class TokenLaunchService extends BaseService {
 	/**
 	 * Create token info and metadata
 	 *
+	 * Server requires an image. You can either:
+	 * - provide an image file via `params.image` (uploaded to the EP), or
+	 * - provide an `params.imageUrl` to reuse an existing image.
+	 *
+	 * Optionally, pass `params.metadataUrl` to reuse existing metadata and skip IPFS upload.
+	 * If omitted, the server will generate and upload metadata to IPFS.
+	 *
 	 * @param params The parameters for the token info
-	 * @returns The token info
+	 * @returns The token info response
 	 */
 	async createTokenInfoAndMetadata(params: CreateTokenInfoParams): Promise<CreateTokenInfoResponse> {
+		const normalized = validateAndNormalizeCreateTokenInfoParams(params);
+
 		const formData = new FormData();
 
-		const imageData = await prepareImageForFormData(params.image);
-
-		formData.append('image', imageData.buffer, {
-			filename: imageData.filename,
-			contentType: imageData.contentType,
-		});
-
-		formData.append('name', params.name);
-		formData.append('symbol', params.symbol);
-		formData.append('description', params.description);
-
-		if (params.telegram) {
-			formData.append('telegram', params.telegram);
+		if (normalized.kind === 'file') {
+			const imageData = await prepareImageForFormData(normalized.image);
+			formData.append('image', imageData.buffer, {
+				filename: imageData.filename,
+				contentType: imageData.contentType,
+			});
+		} else {
+			formData.append('imageUrl', normalized.imageUrl);
 		}
-		if (params.website) {
-			formData.append('website', params.website);
+
+		formData.append('name', normalized.name);
+		formData.append('symbol', normalized.symbol);
+		formData.append('description', normalized.description);
+
+		if (normalized.telegram) {
+			formData.append('telegram', normalized.telegram);
 		}
-		if (params.twitter) {
-			formData.append('twitter', params.twitter);
+		if (normalized.website) {
+			formData.append('website', normalized.website);
+		}
+		if (normalized.twitter) {
+			formData.append('twitter', normalized.twitter);
+		}
+		if (normalized.metadataUrl) {
+			formData.append('metadataUrl', normalized.metadataUrl);
 		}
 
 		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>('/token-launch/create-token-info', formData, {
