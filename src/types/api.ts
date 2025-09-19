@@ -65,3 +65,8 @@ export type BagsGetFeeShareWalletV2Response<WalletType = string> = {
 export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2Response<PublicKey>;
 
 export type BagsGetFeeShareWalletV2ApiResponse = BagsApiResponse<BagsGetFeeShareWalletV2Response>;
+
+export type TransactionTipConfig = {
+	tipWallet: PublicKey;
+	tipLamports: number;
+}

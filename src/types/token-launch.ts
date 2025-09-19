@@ -1,4 +1,5 @@
 import { PublicKey, VersionedTransaction } from '@solana/web3.js';
+import { TransactionTipConfig } from './api';
 
 export type GetOrCreateConfigResponse = {
 	transaction: VersionedTransaction | null;
@@ -16,6 +17,7 @@ export interface CreateLaunchTransactionParams {
 	launchWallet: PublicKey;
 	initialBuyLamports: number;
 	configKey: PublicKey;
+	tipConfig?: TransactionTipConfig;
 }
 
 export interface CreateTokenInfoParams {
@@ -71,4 +73,5 @@ export type CreateFeeShareConfigParams = {
 	baseMint: PublicKey;
 	/* This needs to be wSOL mint atm */
 	quoteMint: PublicKey;
+	tipConfig?: TransactionTipConfig;
 };

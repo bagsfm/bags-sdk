@@ -23,6 +23,10 @@ export class TokenLaunchService extends BaseService {
 			wallet: params.launchWallet.toBase58(),
 			initialBuyLamports: params.initialBuyLamports,
 			configKey: params.configKey.toBase58(),
+			tipConfig: params.tipConfig ? {
+				tipWallet: params.tipConfig.tipWallet.toBase58(),
+				tipLamports: params.tipConfig.tipLamports,
+			} : undefined,
 		});
 
 		const decodedSignedTransaction = bs58.decode(encodedSignedTransaction);
