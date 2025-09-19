@@ -31,10 +31,8 @@ export class ConfigService extends BaseService {
 
 		const response = await this.bagsApiClient.post<TransactionConfigApiResponse>('/token-launch/create-config', {
 			launchWallet: wallet.toBase58(),
-			tipConfig: tipConfig ? {
-				tipWallet: tipConfig.tipWallet.toBase58(),
-				tipLamports: tipConfig.tipLamports,
-			} : undefined,
+			tipWallet: tipConfig ? tipConfig.tipWallet.toBase58() : undefined,
+			tipLamports: tipConfig ? tipConfig.tipLamports : undefined,
 		});
 
 		if (response.tx == null) {
@@ -93,10 +91,8 @@ export class ConfigService extends BaseService {
 			payer: params.payer.toBase58(),
 			baseMint: params.baseMint.toBase58(),
 			quoteMint: params.quoteMint.toBase58(),
-			tipConfig: params.tipConfig ? {
-				tipWallet: params.tipConfig.tipWallet.toBase58(),
-				tipLamports: params.tipConfig.tipLamports,
-			} : undefined,
+			tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
+			tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
 		});
 
 		const decodedTransaction = bs58.decode(response.tx);
