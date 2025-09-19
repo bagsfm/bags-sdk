@@ -1,7 +1,7 @@
 import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import { getExistingConfig } from '../utils/config';
-import { FeeShareTransactionConfigApiResponse, TransactionConfigApiResponse } from '../types/api';
+import { FeeShareTransactionConfigApiResponse, TransactionConfigApiResponse, TransactionTipConfig } from '../types/api';
 import { CreateFeeShareConfigParams, CreateFeeShareConfigResponse, GetOrCreateConfigResponse } from '../types/token-launch';
 import bs58 from 'bs58';
 import { WRAPPED_SOL_MINT } from '../constants';
@@ -16,9 +16,10 @@ export class ConfigService extends BaseService {
 	 * Get config creation transaction or config
 	 *
 	 * @param wallet The wallet to get the config creation transaction or config for
+	 * @param tipConfig Optional tip config to use for the config creation transaction
 	 * @returns either the config creation transaction or the config
 	 */
-	async getOrCreateConfig(wallet: PublicKey): Promise<GetOrCreateConfigResponse> {
+	async getOrCreateConfig(wallet: PublicKey, tipConfig?: TransactionTipConfig): Promise<GetOrCreateConfigResponse> {
 		const existingConfig = await getExistingConfig(wallet, this.connection, this.commitment);
 
 		if (existingConfig != null) {
@@ -30,6 +31,8 @@ export class ConfigService extends BaseService {
 
 		const response = await this.bagsApiClient.post<TransactionConfigApiResponse>('/token-launch/create-config', {
 			launchWallet: wallet.toBase58(),
+			tipWallet: tipConfig ? tipConfig.tipWallet.toBase58() : undefined,
+			tipLamports: tipConfig ? tipConfig.tipLamports : undefined,
 		});
 
 		if (response.tx == null) {
@@ -88,6 +91,8 @@ export class ConfigService extends BaseService {
 			payer: params.payer.toBase58(),
 			baseMint: params.baseMint.toBase58(),
 			quoteMint: params.quoteMint.toBase58(),
+			tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
+			tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
 		});
 
 		const decodedTransaction = bs58.decode(response.tx);
