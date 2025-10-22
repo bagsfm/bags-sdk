@@ -1,5 +1,5 @@
 import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
-import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2Response, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
+import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2Response, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, GetTopTokensByLifetimeFeesResponse, SupportedSocialProvider, TokenLaunchCreator, BagsTokenLeaderBoardItem } from '../types/api';
 import type { Program } from '@coral-xyz/anchor';
 import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
@@ -101,6 +101,21 @@ export class StateService {
 		});
 
 		return creators;
+	}
+
+	/**
+	 * Get top tokens by lifetime fees
+	 *
+	 * @returns The leaderboard items
+	 */
+	async getTopTokensByLifetimeFees(): Promise<Array<BagsTokenLeaderBoardItem>> {
+		const response = await this.bagsApiClient.get<GetTopTokensByLifetimeFeesResponse>('/token-launch/top-tokens/lifetime-fees');
+
+		if (!response.success) {
+			throw new Error('Failed to get top tokens by lifetime fees');
+		}
+
+		return response.response;
 	}
 
 	/**
