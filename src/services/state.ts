@@ -1,5 +1,14 @@
 import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
-import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2Response, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
+import type {
+	BagsGetFeeShareWalletV2ApiResponse,
+	BagsGetFeeShareWalletV2Response,
+	BagsGetFeeShareWalletV2State,
+	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
+	GetTokenClaimStatsV2Response,
+	SupportedSocialProvider,
+	TokenLaunchCreator,
+	TokenLaunchCreatorV3WithClaimStats,
+} from '../types/api';
 import type { Program } from '@coral-xyz/anchor';
 import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
@@ -101,6 +110,26 @@ export class StateService {
 		});
 
 		return creators;
+	}
+
+	/**
+	 * Get token claim stats
+	 *
+	 * @param tokenMint The mint of the token to get the claim stats for
+	 * @returns The creators with claim stats
+	 */
+	async getTokenClaimStats(tokenMint: PublicKey): Promise<Array<TokenLaunchCreatorV3WithClaimStats>> {
+		const response = await this.bagsApiClient.get<GetTokenClaimStatsV2Response>('/token-launch/claim-stats', {
+			params: {
+				tokenMint: tokenMint.toBase58(),
+			},
+		});
+
+		if (!response.success) {
+			throw new Error('Failed to get token claim stats');
+		}
+
+		return response.response;
 	}
 
 	/**

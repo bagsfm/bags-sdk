@@ -70,3 +70,16 @@ export type TransactionTipConfig = {
 	tipWallet: PublicKey;
 	tipLamports: number;
 }
+
+export type TokenLaunchCreatorV3WithClaimStats = TokenLaunchCreator & {
+	totalClaimed: string;
+};
+export type GetTokenClaimStatsV2ErrorResponse = {
+	success: false;
+	response: string;
+};
+export type GetTokenClaimStatsV2SuccessResponse = {
+	success: true;
+	response: Array<TokenLaunchCreatorV3WithClaimStats>;
+};
+export type GetTokenClaimStatsV2Response = GetTokenClaimStatsV2SuccessResponse | GetTokenClaimStatsV2ErrorResponse;
