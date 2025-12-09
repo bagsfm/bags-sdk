@@ -1,106 +1,137 @@
-import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
+import { AddressLookupTableProgram, Commitment, ComputeBudgetProgram, Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
-import { getExistingConfig } from '../utils/config';
-import { FeeShareTransactionConfigApiResponse, TransactionConfigApiResponse, TransactionTipConfig } from '../types/api';
-import { CreateFeeShareConfigParams, CreateFeeShareConfigResponse, GetOrCreateConfigResponse } from '../types/token-launch';
+import type { BagsGetOrCreateFeeShareConfigArgs, TransactionTipConfig } from '../types/api';
+import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../constants';
+import { chunkArray } from '../utils/helpers';
+import { GetOrCreateConfigApiResponse } from '../types/fee-share';
+import { validateAndNormalizeCreateFeeShareConfigParams } from '../utils/validations';
 import bs58 from 'bs58';
-import { WRAPPED_SOL_MINT } from '../constants';
-import { sortKeys } from '../utils/fee-share';
 
 export class ConfigService extends BaseService {
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
 		super(apiKey, connection, commitment);
 	}
 
-	/**
-	 * Get config creation transaction or config
-	 *
-	 * @param wallet The wallet to get the config creation transaction or config for
-	 * @param tipConfig Optional tip config to use for the config creation transaction
-	 * @returns either the config creation transaction or the config
-	 */
-	async getOrCreateConfig(wallet: PublicKey, tipConfig?: TransactionTipConfig): Promise<GetOrCreateConfigResponse> {
-		const existingConfig = await getExistingConfig(wallet, this.connection, this.commitment);
-
-		if (existingConfig != null) {
-			return {
-				configKey: existingConfig,
-				transaction: null,
-			};
+	async getConfigCreationLookupTableTransactions(
+		args: Exclude<BagsGetOrCreateFeeShareConfigArgs, 'additionalLookupTables'>,
+		tipConfig?: TransactionTipConfig
+	): Promise<{ creationTransaction: VersionedTransaction; extendTransactions: Array<VersionedTransaction>; lutAddresses: Array<PublicKey> } | null> {
+		if (args.feeClaimers.length <= BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT) {
+			console.warn('A lookup table is not needed for this config creation');
+			return null;
 		}
 
-		const response = await this.bagsApiClient.post<TransactionConfigApiResponse>('/token-launch/create-config', {
-			launchWallet: wallet.toBase58(),
-			tipWallet: tipConfig ? tipConfig.tipWallet.toBase58() : undefined,
-			tipLamports: tipConfig ? tipConfig.tipLamports : undefined,
+		const lutAccounts = args.feeClaimers.map((claimer) => claimer.user);
+
+		const [createLutIx, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+			authority: args.payer,
+			payer: args.payer,
+			recentSlot: await this.connection.getSlot(this.commitment),
 		});
 
-		if (response.tx == null) {
-			return {
-				configKey: new PublicKey(response.configKey),
-				transaction: null,
-			};
-		} else {
-			const decodedTransaction = bs58.decode(response.tx);
-			const transaction = VersionedTransaction.deserialize(decodedTransaction);
+		const recentBlockhash = await this.connection.getLatestBlockhash(this.commitment);
 
-			return {
-				transaction,
-				configKey: new PublicKey(response.configKey),
-			};
+		const createLutTransaction = new VersionedTransaction(
+			new TransactionMessage({
+				payerKey: args.payer,
+				recentBlockhash: recentBlockhash.blockhash,
+				instructions: [
+					ComputeBudgetProgram.setComputeUnitLimit({
+						units: 30_000,
+					}),
+					ComputeBudgetProgram.setComputeUnitPrice({
+						microLamports: 40_000,
+					}),
+					createLutIx,
+					tipConfig
+						? SystemProgram.transfer({
+								fromPubkey: args.payer,
+								toPubkey: tipConfig.tipWallet,
+								lamports: tipConfig.tipLamports,
+							})
+						: undefined,
+				],
+			}).compileToV0Message()
+		);
+
+		const lutAccountChunks = chunkArray(lutAccounts, 25);
+		const extendTransactions = [];
+
+		for (const chunk of lutAccountChunks) {
+			const extendLutIx = AddressLookupTableProgram.extendLookupTable({
+				lookupTable: lookupTableAddress,
+				authority: args.payer,
+				payer: args.payer,
+				addresses: chunk,
+			});
+
+			const extendLutTransaction = new VersionedTransaction(
+				new TransactionMessage({
+					payerKey: args.payer,
+					recentBlockhash: recentBlockhash.blockhash,
+					instructions: [
+						ComputeBudgetProgram.setComputeUnitLimit({
+							units: 30_000,
+						}),
+						ComputeBudgetProgram.setComputeUnitPrice({
+							microLamports: 40_000,
+						}),
+						extendLutIx,
+						tipConfig
+							? SystemProgram.transfer({
+									fromPubkey: args.payer,
+									toPubkey: tipConfig.tipWallet,
+									lamports: tipConfig.tipLamports,
+								})
+							: undefined,
+					],
+				}).compileToV0Message()
+			);
+
+			extendTransactions.push(extendLutTransaction);
 		}
+
+		return {
+			creationTransaction: createLutTransaction,
+			extendTransactions,
+			lutAddresses: [lookupTableAddress],
+		};
 	}
 
 	/**
-	 * Get config creation transaction with shared fees
+	 * Get a Bags Fee Share config creation transaction
 	 *
-	 * @param params The parameters for creating a fee share config
-	 * @returns The config creation transaction and config key
+	 * @param args The arguments for the config creation
+	 * @param tipConfig Optional tip config to use for the config creation transaction
+	 * @returns The config creation transaction
 	 */
+	async createBagsFeeShareConfig(
+		args: BagsGetOrCreateFeeShareConfigArgs,
+		tipConfig?: TransactionTipConfig
+	): Promise<{ transactions: Array<VersionedTransaction>; bundles: Array<Array<VersionedTransaction>>; meteoraConfigKey: PublicKey }> {
+		const normalizedParams = validateAndNormalizeCreateFeeShareConfigParams(args, tipConfig);
+		const response = await this.bagsApiClient.post<GetOrCreateConfigApiResponse>('/fee-share/config', normalizedParams);
 
-	async createFeeShareConfig(params: CreateFeeShareConfigParams): Promise<CreateFeeShareConfigResponse> {
-		if (params.users.length !== 2) {
-			throw new Error('Only exactly 2 users are supported');
+		if (!response.needsCreation) {
+			throw new Error('Config already exists');
 		}
 
-		if (params.users.reduce((acc, user) => acc + user.bps, 0) !== 10000) {
-			throw new Error('Users basis points must sum to 10000');
-		}
-
-		if (params.quoteMint.toBase58() != WRAPPED_SOL_MINT.toBase58()) {
-			throw new Error('Non-wSOL quote mint not supported');
-		}
-
-		if (!params.baseMint.toBase58().endsWith('BAGS')) {
-			throw new Error('Non-BAGS base mint not supported');
-		}
-
-		const sortedKeys = sortKeys(params.users[0].wallet, params.users[1].wallet);
-
-		const walletA = sortedKeys.sortedA;
-		const walletB = sortedKeys.sortedB;
-
-		const walletABps = params.users.find((user) => user.wallet.toBase58() === walletA.toBase58()).bps;
-		const walletBBps = params.users.find((user) => user.wallet.toBase58() === walletB.toBase58()).bps;
-
-		const response = await this.bagsApiClient.post<FeeShareTransactionConfigApiResponse>('/token-launch/fee-share/create-config', {
-			walletA: walletA.toBase58(),
-			walletB: walletB.toBase58(),
-			walletABps: walletABps,
-			walletBBps: walletBBps,
-			payer: params.payer.toBase58(),
-			baseMint: params.baseMint.toBase58(),
-			quoteMint: params.quoteMint.toBase58(),
-			tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
-			tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
+		const transactions = response.transactions?.map((transaction) => {
+			const decodedTransaction = bs58.decode(transaction.transaction);
+			return VersionedTransaction.deserialize(decodedTransaction);
 		});
 
-		const decodedTransaction = bs58.decode(response.tx);
-		const transaction = VersionedTransaction.deserialize(decodedTransaction);
+		const bundles = response.bundles?.map((bundle) => {
+			return bundle.map((transaction) => {
+				const decodedTransaction = bs58.decode(transaction.transaction);
+				return VersionedTransaction.deserialize(decodedTransaction);
+			});
+		});
 
 		return {
-			transaction,
-			configKey: new PublicKey(response.configKey),
+			transactions,
+			bundles,
+			meteoraConfigKey: new PublicKey(response.meteoraConfigKey),
 		};
 	}
 }

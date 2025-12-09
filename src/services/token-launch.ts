@@ -1,7 +1,7 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse, NormalizedCreateTokenInfoParams } from '../types/token-launch';
+import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';

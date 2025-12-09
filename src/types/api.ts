@@ -64,9 +64,40 @@ export type BagsGetFeeShareWalletV2Response<WalletType = string> = {
 
 export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2Response<PublicKey>;
 
-export type BagsGetFeeShareWalletV2ApiResponse = BagsApiResponse<BagsGetFeeShareWalletV2Response>;
-
 export type TransactionTipConfig = {
 	tipWallet: PublicKey;
 	tipLamports: number;
-}
+};
+
+type BagsFeeClaimer = {
+	user: PublicKey;
+	userBps: number;
+};
+
+export type BagsGetOrCreateFeeShareConfigArgs = {
+	feeClaimers: Array<BagsFeeClaimer>;
+	payer: PublicKey;
+	baseMint: PublicKey;
+	partner?: PublicKey;
+	partnerConfig?: PublicKey;
+	additionalLookupTables?: Array<PublicKey>;
+};
+
+export type TransactionWithBlockhash = {
+	transaction: string;
+	blockhash: BlockhashWithExpiryBlockHeight;
+};
+
+export type PartnerConfigClaimStatsResponse = {
+	claimedFees: string;
+	unclaimedFees: string;
+};
+
+export type TokenLaunchCreatorV3WithClaimStats = TokenLaunchCreator & {
+	totalClaimed: string;
+};
+
+export type GetTokenClaimStatsV2Response = {
+	success: true;
+	response: Array<TokenLaunchCreatorV3WithClaimStats>;
+};
