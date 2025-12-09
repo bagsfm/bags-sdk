@@ -21,7 +21,7 @@ export function maxKey(left: PublicKey, right: PublicKey): Uint8Array {
 	return leftBytes;
 }
 /**
- * Returns the smaller of two public keys by comparing their byte arrays
+ * Returns keyA and keyB ordered so that sortedA is the smaller public key (by byte comparison)
  * @param keyA First public key to compare
  * @param keyB Second public key to compare
  * @returns Object containing the sorted public keys

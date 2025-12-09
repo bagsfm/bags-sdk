@@ -28,26 +28,26 @@ export interface CreateLaunchTransactionParams {
  * Optionally, `metadataUrl` can be provided to bypass metadata upload.
  */
 export type CreateTokenInfoParams = (
-    {
-        image: ImageInput;
-        imageUrl?: never;
-    } |
-    {
-        image?: never;
-        imageUrl: string;
-    }
- ) & {
-    name: string;
-    symbol: string;
-    description: string;
-    telegram?: string;
-    twitter?: string;
-    website?: string;
-    /**
-     * Optional: Provide an existing metadata URL (e.g., IPFS/Arweave).
-     * If omitted, the server will create and upload metadata for you.
-     */
-    metadataUrl?: string;
+	| {
+			image: ImageInput;
+			imageUrl?: never;
+	  }
+	| {
+			image?: never;
+			imageUrl: string;
+	  }
+) & {
+	name: string;
+	symbol: string;
+	description: string;
+	telegram?: string;
+	twitter?: string;
+	website?: string;
+	/**
+	 * Optional: Provide an existing metadata URL (e.g., IPFS/Arweave).
+	 * If omitted, the server will create and upload metadata for you.
+	 */
+	metadataUrl?: string;
 };
 
 export enum TokenLaunchStatus {
@@ -97,21 +97,34 @@ export type CreateFeeShareConfigParams = {
 };
 
 export type NormalizedCreateTokenInfoParams =
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	| ({ kind: 'file'; image: any } & {
-		name: string;
-		symbol: string;
-		description: string;
-		telegram?: string;
-		twitter?: string;
-		website?: string;
-		metadataUrl?: string;
-	})
+			name: string;
+			symbol: string;
+			description: string;
+			telegram?: string;
+			twitter?: string;
+			website?: string;
+			metadataUrl?: string;
+	  })
 	| ({ kind: 'url'; imageUrl: string } & {
-		name: string;
-		symbol: string;
-		description: string;
-		telegram?: string;
-		twitter?: string;
-		website?: string;
-		metadataUrl?: string;
-	});
+			name: string;
+			symbol: string;
+			description: string;
+			telegram?: string;
+			twitter?: string;
+			website?: string;
+			metadataUrl?: string;
+	  });
+
+export type NormalizedCreateFeeShareConfigParams = {
+	basisPointsArray: Array<number>;
+	payer: string;
+	baseMint: string;
+	partner?: string;
+	partnerConfig?: string;
+	claimersArray: Array<string>;
+	tipWallet?: string;
+	tipLamports?: number;
+	additionalLookupTables?: Array<string>;
+};

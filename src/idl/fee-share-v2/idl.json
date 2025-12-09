@@ -1,0 +1,5447 @@
+{
+  "address": "FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK",
+  "metadata": {
+    "name": "bags_fee_share",
+    "version": "2.0.0",
+    "spec": "0.1.0",
+    "description": "Bags Fee Share V2 Program"
+  },
+  "instructions": [
+    {
+      "name": "claim_damm_v2",
+      "docs": [
+        "Claim DAMM v2 fees"
+      ],
+      "discriminator": [
+        232,
+        175,
+        106,
+        19,
+        168,
+        54,
+        186,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer (covers any runtime init costs)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA; seeds by base/quote mints)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA); signer for CPIs and fee distribution"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (receives quote fees)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "fee_share_authority_base_ata",
+          "docs": [
+            "Authority's base mint ATA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "writable": true,
+          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+        },
+        {
+          "name": "platform_vault",
+          "docs": [
+            "Platform vault (receives bags fees)"
+          ],
+          "writable": true,
+          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Optional partner config (PDA) used to compute/transfer partner share"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Optional partner wallet (seed and key validation)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "partner_config_quote_ata",
+          "docs": [
+            "Optional partner's WSOL ATA (destination for partner share)"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base token mint (seed)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "damm_program",
+          "docs": [
+            "----------- EXTRA ACCOUNTS FOR DAMM v2 -----------"
+          ],
+          "address": "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG"
+        },
+        {
+          "name": "pool_authority",
+          "address": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC"
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "position",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "position_nft_account"
+        },
+        {
+          "name": "damm_event_authority",
+          "address": "3rmHSu74h1ZcmAisVcWerTCiRDQbUrBKmcwptYGjHfet"
+        },
+        {
+          "name": "token_base_program",
+          "docs": [
+            "SPL Token programs for both legs"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_quote_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_dbc",
+      "docs": [
+        "Claim DBC fees"
+      ],
+      "discriminator": [
+        229,
+        142,
+        38,
+        65,
+        198,
+        50,
+        110,
+        58
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding any init_if_needed ATAs"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA; seeds by base/quote mints)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA); signer for CPIs and fee distribution"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (receives quote fees)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "fee_share_authority_base_ata",
+          "docs": [
+            "Authority's base mint ATA (DBC CPI interface)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Optional partner config (PDA) used to compute/transfer partner share"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Optional partner wallet (seed and key validation)"
+          ],
+          "optional": true
+        },
+        {
+          "name": "partner_config_quote_ata",
+          "docs": [
+            "Optional partner's WSOL ATA (destination for partner share)"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "writable": true,
+          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+        },
+        {
+          "name": "platform_vault",
+          "docs": [
+            "Platform vault (receives bags fees)"
+          ],
+          "writable": true,
+          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base token mint (seed)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "dbc_program",
+          "address": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN"
+        },
+        {
+          "name": "pool_authority",
+          "docs": [
+            "----------- EXTRA ACCOUNTS FOR METEORA -----------"
+          ],
+          "address": "FhVo3mqL8PW5pH5U2CN4XE33DokiyZnUwuGpH2hmHLuM"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "dbc_event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                9,
+                96,
+                12,
+                165,
+                36,
+                247,
+                177,
+                183,
+                214,
+                204,
+                177,
+                195,
+                151,
+                58,
+                160,
+                51,
+                13,
+                25,
+                3,
+                218,
+                96,
+                28,
+                201,
+                181,
+                222,
+                227,
+                198,
+                98,
+                180,
+                202,
+                209,
+                73
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_base_program",
+          "docs": [
+            "SPL Token programs for both legs (DBC interface)"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_quote_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_partner",
+      "docs": [
+        "Claim partner fees"
+      ],
+      "discriminator": [
+        181,
+        78,
+        148,
+        221,
+        100,
+        54,
+        21,
+        114
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding init_if_needed of partner's ATA"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Partner signer receiving funds"
+          ],
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "partner_config"
+          ]
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Partner config (PDA), also PDA authority for its ATA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_quote_ata",
+          "docs": [
+            "Partner's WSOL ATA (destination; init-if-needed)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner_config_quote_ata",
+          "docs": [
+            "PartnerConfig's WSOL ATA (source; PDA-owned)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_platform_fees",
+      "docs": [
+        "Claim platform fees to the receiver"
+      ],
+      "discriminator": [
+        159,
+        129,
+        37,
+        35,
+        170,
+        99,
+        163,
+        16
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing the claim"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "receiver",
+          "docs": [
+            "Receiver of the platform fees (could be admin itself)"
+          ]
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "platform_vault",
+          "docs": [
+            "Platform vault (receives bags fees)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "program_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "receiver_quote_ata",
+          "docs": [
+            "Receiver's WSOL ATA (destination; init-if-needed)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "receiver"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_user",
+      "docs": [
+        "Claim user fees"
+      ],
+      "discriminator": [
+        164,
+        64,
+        55,
+        199,
+        90,
+        78,
+        147,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding init_if_needed of user's ATA"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user",
+          "docs": [
+            "The claiming user; must match `claimers[idx]`"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA; seeds by base/quote mints)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA; source of funds)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (source)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user_quote_ata",
+          "docs": [
+            "User's WSOL ATA (destination; init-if-needed)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base token mint (seed)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ClaimUserParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "confirm_admin",
+      "docs": [
+        "Pending admin confirms and becomes the admin"
+      ],
+      "discriminator": [
+        18,
+        211,
+        32,
+        168,
+        193,
+        120,
+        133,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "pending_admin",
+          "docs": [
+            "Pending admin must sign to accept"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_fee_config",
+      "docs": [
+        "Create fee config"
+      ],
+      "discriminator": [
+        214,
+        172,
+        105,
+        64,
+        8,
+        228,
+        209,
+        204
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding account creations and ATAs"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Initialize fee share config (PDA) with claimers/BPS"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Initialize fee ledger (PDA) sized to number of claimers"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (init-if-needed)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Optional partner config (PDA) for partner share"
+          ],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Optional partner wallet used in seeds/header"
+          ],
+          "optional": true
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CreateFeeConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_partner_config",
+      "docs": [
+        "Create partner config"
+      ],
+      "discriminator": [
+        208,
+        0,
+        245,
+        161,
+        220,
+        128,
+        138,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding account creations and ATAs"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Initialize partner config (PDA) for the given partner"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_config_quote_ata",
+          "docs": [
+            "PartnerConfig's WSOL ATA (receives partner share)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "partner_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Partner wallet associated with the config"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CreatePartnerConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dummy_1",
+      "docs": [
+        "Dummy function to be used for IDL generation",
+        "",
+        "DO NOT CALL THIS FUNCTION"
+      ],
+      "discriminator": [
+        159,
+        255,
+        61,
+        156,
+        197,
+        198,
+        94,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "input",
+          "type": {
+            "defined": {
+              "name": "FeeShareConfig"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dummy_2",
+      "docs": [
+        "Dummy function to be used for IDL generation",
+        "",
+        "DO NOT CALL THIS FUNCTION"
+      ],
+      "discriminator": [
+        156,
+        133,
+        43,
+        254,
+        54,
+        30,
+        107,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "input",
+          "type": {
+            "defined": {
+              "name": "FeeShareAuthority"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "extend_created_fee_config",
+      "docs": [
+        "Extend fee config during init (append-only growth)"
+      ],
+      "discriminator": [
+        205,
+        172,
+        113,
+        254,
+        225,
+        59,
+        82,
+        79
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding reallocations during extend"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing the extend"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA) whose claimers/BPS are extended"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA) whose fees array will be reallocated with zeros appended"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Optional partner wallet used in seeds/header"
+          ],
+          "optional": true
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Optional partner config account; if provided must match seeds with `partner`"
+          ],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_mint"
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed for PDAs)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program (realloc/rent)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ExtendCreatedFeeConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "force_claim_user",
+      "docs": [
+        "Force claim user fees (admin only)"
+      ],
+      "discriminator": [
+        216,
+        217,
+        173,
+        83,
+        118,
+        151,
+        252,
+        48
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing force claim"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "docs": [
+            "Claimer user (no signature required)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA; seeds by base/quote mints)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA; source of funds)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (source)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "user_quote_ata",
+          "docs": [
+            "User's WSOL ATA (destination; init-if-needed)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base token mint (seed)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ForceClaimUserParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "init_program_config",
+      "docs": [
+        "Initialize the singleton ProgramConfig. Callable once."
+      ],
+      "discriminator": [
+        185,
+        54,
+        237,
+        229,
+        219,
+        179,
+        109,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "Payer funding the account creation"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Initial admin who will control the program"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Initialize the singleton ProgramConfig PDA"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "platform_vault",
+          "docs": [
+            "Program vault (receives bags fees)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "program_config"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_fee_config",
+      "docs": [
+        "Update fee config (claimers + bps + partner_bps)"
+      ],
+      "discriminator": [
+        104,
+        184,
+        103,
+        242,
+        88,
+        151,
+        107,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing the update"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA) whose claimers/BPS are updated"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA) whose fees array may be reallocated/reordered"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base mint (seed for PDAs)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed for PDAs)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program (realloc/rent)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateFeeConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_partner_config",
+      "docs": [
+        "Update partner config"
+      ],
+      "discriminator": [
+        111,
+        77,
+        242,
+        174,
+        244,
+        48,
+        138,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing update"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Partner config (PDA) to update BPS; must belong to `partner`"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Partner wallet referenced by the config"
+          ],
+          "relations": [
+            "partner_config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program (if realloc/rent needed)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdatePartnerConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_program_config",
+      "docs": [
+        "Set or clear a pending admin (two-step transfer)"
+      ],
+      "discriminator": [
+        214,
+        3,
+        187,
+        98,
+        170,
+        106,
+        33,
+        45
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdateProgramConfigParameters"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "FeeShareAuthorityHeader",
+      "discriminator": [
+        82,
+        28,
+        140,
+        167,
+        168,
+        216,
+        93,
+        211
+      ]
+    },
+    {
+      "name": "FeeShareConfigHeader",
+      "discriminator": [
+        40,
+        71,
+        136,
+        156,
+        222,
+        49,
+        31,
+        201
+      ]
+    },
+    {
+      "name": "PartnerConfig",
+      "discriminator": [
+        212,
+        110,
+        106,
+        253,
+        66,
+        131,
+        77,
+        96
+      ]
+    },
+    {
+      "name": "ProgramConfig",
+      "discriminator": [
+        196,
+        210,
+        90,
+        231,
+        144,
+        149,
+        140,
+        63
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BagsFeeSharePartnerClaimEvent",
+      "discriminator": [
+        180,
+        40,
+        86,
+        176,
+        242,
+        25,
+        220,
+        77
+      ]
+    },
+    {
+      "name": "BagsFeeShareProtocolClaimEvent",
+      "discriminator": [
+        168,
+        122,
+        235,
+        187,
+        157,
+        4,
+        94,
+        126
+      ]
+    },
+    {
+      "name": "BagsFeeShareUserClaimEvent",
+      "discriminator": [
+        115,
+        178,
+        50,
+        219,
+        175,
+        234,
+        48,
+        101
+      ]
+    },
+    {
+      "name": "FeeConfigSnapshotEvent",
+      "discriminator": [
+        121,
+        73,
+        0,
+        217,
+        175,
+        252,
+        147,
+        193
+      ]
+    },
+    {
+      "name": "FeeConfigUpdatedEvent",
+      "discriminator": [
+        139,
+        188,
+        235,
+        116,
+        222,
+        55,
+        95,
+        201
+      ]
+    },
+    {
+      "name": "PartnerAccumulatedEvent",
+      "discriminator": [
+        114,
+        92,
+        185,
+        185,
+        201,
+        162,
+        75,
+        240
+      ]
+    },
+    {
+      "name": "PartnerConfigCreatedEvent",
+      "discriminator": [
+        110,
+        5,
+        186,
+        72,
+        118,
+        105,
+        115,
+        126
+      ]
+    },
+    {
+      "name": "PartnerConfigUpdatedEvent",
+      "discriminator": [
+        131,
+        8,
+        238,
+        0,
+        102,
+        179,
+        81,
+        241
+      ]
+    },
+    {
+      "name": "PlatformAccumulatedEvent",
+      "discriminator": [
+        135,
+        109,
+        121,
+        126,
+        171,
+        62,
+        118,
+        76
+      ]
+    },
+    {
+      "name": "PlatformClaimedEvent",
+      "discriminator": [
+        147,
+        166,
+        33,
+        185,
+        161,
+        49,
+        207,
+        139
+      ]
+    },
+    {
+      "name": "ProgramConfigAdminUpdatedEvent",
+      "discriminator": [
+        19,
+        215,
+        161,
+        37,
+        149,
+        193,
+        142,
+        93
+      ]
+    },
+    {
+      "name": "ProgramConfigInitializedEvent",
+      "discriminator": [
+        210,
+        169,
+        156,
+        90,
+        13,
+        171,
+        254,
+        140
+      ]
+    },
+    {
+      "name": "ProgramConfigUpdatedEvent",
+      "discriminator": [
+        14,
+        133,
+        50,
+        100,
+        0,
+        210,
+        124,
+        228
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TypeConversionFailed",
+      "msg": "Type conversion failed"
+    },
+    {
+      "code": 6001,
+      "name": "CheckedCalculationOverflow",
+      "msg": "Checked Calculation overflowed"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidBPS",
+      "msg": "Invalid BPS provided, total of all should equal 10_000"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidPartnerBPS",
+      "msg": "When partner is provided, partner_bps must be gt 0 and lt 10_000"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidPlatformBPS",
+      "msg": "Invalid platform BPS provided, must be lt 10_000"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidPartnerAccounts",
+      "msg": "Invalid partner accounts provided"
+    },
+    {
+      "code": 6006,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6007,
+      "name": "NothingToClaim",
+      "msg": "Nothing to claim"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidDataLength",
+      "msg": "Invalid data length"
+    },
+    {
+      "code": 6009,
+      "name": "MismatchedLengths",
+      "msg": "Mismatched claimers and bps lengths"
+    },
+    {
+      "code": 6010,
+      "name": "IndexOutOfBounds",
+      "msg": "Index out of bounds"
+    },
+    {
+      "code": 6011,
+      "name": "OnlyWSOLSupported",
+      "msg": "Only WSOL is supported as quote mint"
+    },
+    {
+      "code": 6012,
+      "name": "DuplicateClaimer",
+      "msg": "Duplicate claimer provided"
+    },
+    {
+      "code": 6013,
+      "name": "CannotRemoveClaimerWithFees",
+      "msg": "Cannot remove claimer that still has outstanding fees"
+    },
+    {
+      "code": 6014,
+      "name": "CannotChangeClaimerIndexWithFees",
+      "msg": "Cannot change index for claimer that still has outstanding fees"
+    },
+    {
+      "code": 6015,
+      "name": "Unreachable",
+      "msg": "Shouldn't happen, but fell through to here"
+    },
+    {
+      "code": 6016,
+      "name": "NoPendingAdmin",
+      "msg": "No pending admin"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidAmountOut",
+      "msg": "Invalid amount out provided"
+    },
+    {
+      "code": 6018,
+      "name": "CannotSetSelfAsPendingAdmin",
+      "msg": "Cannot set self as pending admin"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidUpdateIndex",
+      "msg": "Invalid update index"
+    },
+    {
+      "code": 6020,
+      "name": "ConfigNotInitialized",
+      "msg": "Config not initialized"
+    },
+    {
+      "code": 6021,
+      "name": "ConfigUpdateLocked",
+      "msg": "Config update is currently locked"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidNumClaimers",
+      "msg": "Invalid number of claimers, must be between 1 and MAX_CLAIMERS"
+    },
+    {
+      "code": 6023,
+      "name": "ConfigAlreadyFinalized",
+      "msg": "Config already finalized"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidFeeShareAuthority",
+      "msg": "Invalid fee share authority provided"
+    }
+  ],
+  "types": [
+    {
+      "name": "BagsFeeSharePartnerClaimEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "The partner who claimed"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Partner config account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed",
+            "docs": [
+              "Amount transferred to partner in this ix (quote token units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed_fees",
+            "docs": [
+              "Cumulative amount the partner has claimed to date (quote token units)"
+            ],
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BagsFeeShareProtocolClaimEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "payer",
+            "docs": [
+              "Payer account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "Mint of the base token"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Mint of the quote token"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "docs": [
+              "Pool of the protocol"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_share_config",
+            "docs": [
+              "Fee share config account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_share_authority",
+            "docs": [
+              "Fee share authority account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "claimers",
+            "docs": [
+              "Claimers list (ordered)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "fees",
+            "docs": [
+              "Per-claimer accrued amounts matching `claimers` (quote token units)"
+            ],
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "protocol",
+            "docs": [
+              "Source protocol for this claim snapshot"
+            ],
+            "type": {
+              "defined": {
+                "name": "ClaimProtocol"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "BagsFeeShareUserClaimEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "base mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "quote mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "docs": [
+              "The user who claimed"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_share_config",
+            "docs": [
+              "Fee share config account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_share_authority",
+            "docs": [
+              "Fee share authority account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "claimer_index",
+            "docs": [
+              "Index of the claimer within the config's claimers array"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "claimed",
+            "docs": [
+              "Amount transferred to user (quote token units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "is_forced",
+            "docs": [
+              "Whether this claim was forced by an admin"
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimProtocol",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Dbc"
+          },
+          {
+            "name": "DammV2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimUserParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "claimer_index",
+            "docs": [
+              "Index of claimer in the config claimers array"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateFeeConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bps",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "finalize_init",
+            "docs": [
+              "Whether the initialization is finalized.",
+              "`true`: this is the final ix and wont be able to extend later",
+              "`false`: this is not the final ix and can be extended later"
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatePartnerConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExtendCreatedFeeConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bps",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "finalize_init",
+            "docs": [
+              "Whether the initialization is finalized by this call.",
+              "`true`: finalize now and prevent further extends/updates until normal update flow",
+              "`false`: allow further extends until finalization"
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeConfigSnapshotEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that created/updated the fee config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "payer",
+            "docs": [
+              "Payer account (creator)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_config",
+            "docs": [
+              "Fee share config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_authority",
+            "docs": [
+              "Fee share authority account (PDA holding ledger and ATAs)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint of the bonding curve token"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Quote mint of the bonding curve token"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Optional partner wallet tied to this config"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "partner_bps",
+            "docs": [
+              "Partner share in basis points"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "bps",
+            "docs": [
+              "Per-claimer shares in basis points (aligned with `claimers`)"
+            ],
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "claimers",
+            "docs": [
+              "Ordered claimer addresses for this config"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeConfigUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that updated the fee config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_config",
+            "docs": [
+              "Fee share config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_authority",
+            "docs": [
+              "Fee share authority account (PDA holding ledger and ATAs)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint of the bonding curve token"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "new_bps",
+            "docs": [
+              "Per-claimer shares in basis points (aligned with `claimers`)"
+            ],
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "new_claimers",
+            "docs": [
+              "Ordered claimer addresses for this config"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeShareAuthority",
+      "docs": [
+        "Legacy serialized layout for IDL/IDL tests only. Not used at runtime."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "docs": [
+              "Fee share config public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "Cumulative fees ever accumulated from protocols into the authority ATA"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_user_claimed_fees",
+            "docs": [
+              "Cumulative fees ever claimed out by users"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_partner_claimed_fees",
+            "docs": [
+              "Cumulative fees ever claimed out by partner"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the authority account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "_padding",
+            "docs": [
+              "Future use"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                15
+              ]
+            }
+          },
+          {
+            "name": "fees",
+            "docs": [
+              "Per-claimer accrued amounts (payload is variable-length at runtime)"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                1
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeShareAuthorityHeader",
+      "docs": [
+        "Zero-copy header for fixed fields. This is the `T` in `AccountLoader<'info, T>`."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "docs": [
+              "Fee share config public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "Cumulative fees ever accumulated from protocols into the authority ATA"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_user_claimed_fees",
+            "docs": [
+              "Cumulative fees ever claimed out by users"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_partner_claimed_fees",
+            "docs": [
+              "Cumulative fees ever claimed out by partner"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the authority account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "_padding",
+            "docs": [
+              "Future use"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                15
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeShareConfig",
+      "docs": [
+        "Legacy serialized layout for IDL/IDL tests only. Not used at runtime."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Quote mint public key (currently only WSOL is supported)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Optional partner public"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Optional partner config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "padding_0",
+            "docs": [
+              "Reserved for future use"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                5
+              ]
+            }
+          },
+          {
+            "name": "is_init_finalized",
+            "docs": [
+              "When this is `0` - it's initialization is not done yet (claim/update ixs will fail)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "is_update_locked",
+            "docs": [
+              "When this is `1` - config is locked for pending updates (claim ixs will fail)",
+              "**AVOID** setting this manually, use update methods"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "padding_1",
+            "docs": [
+              "Reserved for future use"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the config account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "claimers",
+            "docs": [
+              "Claimers (payload is variable-length at runtime)"
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                1
+              ]
+            }
+          },
+          {
+            "name": "bps",
+            "docs": [
+              "Claimer shares in basis points (aligned to `claimers`)"
+            ],
+            "type": {
+              "array": [
+                "u16",
+                1
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeShareConfigHeader",
+      "docs": [
+        "Zero-copy header for fixed fields. This is the `T` in `AccountLoader<'info, T>`."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Quote mint public key (currently only WSOL is supported)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Optional partner public"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Optional partner config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "padding_0",
+            "docs": [
+              "Reserved for future use"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                5
+              ]
+            }
+          },
+          {
+            "name": "is_init_finalized",
+            "docs": [
+              "When this is `0` - it's initialization is not done yet (claim/update ixs will fail)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "is_update_locked",
+            "docs": [
+              "When this is `1` - config is locked for pending updates (claim ixs will fail)",
+              "**AVOID** setting this manually, use update methods"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "padding_1",
+            "docs": [
+              "Reserved for future use"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the config account"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ForceClaimUserParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "claimer_index",
+            "docs": [
+              "Index of claimer in the config claimers array"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerAccumulatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Quote mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "docs": [
+              "Pool"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Partner config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Partner wallet receiving share"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "accumulated",
+            "docs": [
+              "Amount added to partner's pending balance in this claim (quote units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_accumulated_fees",
+            "docs": [
+              "Current pending balance available to claim (quote units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "All-time accumulated into partner config before claims (quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "protocol",
+            "docs": [
+              "Source protocol that yielded these fees"
+            ],
+            "type": {
+              "defined": {
+                "name": "ClaimProtocol"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "total_claimed_fees",
+            "docs": [
+              "Total claimed fees for the partner (cumulative, quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_accumulated_fees",
+            "docs": [
+              "Pending partner fees (sum of last protocol claims not yet claimed)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "All-time fees accumulated into the partner config (quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Partner public key"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "padding_1",
+            "docs": [
+              "Reserved for future use (aligned to 1 byte)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the config account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "bps",
+            "docs": [
+              "Partner share in basis points (before distribution to claimers)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "padding_0",
+            "docs": [
+              "Padding reserved for future use (aligned to 8 bytes)"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                5
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerConfigCreatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that created the partner config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Partner config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Partner wallet associated with the config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bps",
+            "docs": [
+              "Partner's fee share in basis points"
+            ],
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerConfigUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that updated the partner config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Partner config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Partner wallet associated with the config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "old_bps",
+            "docs": [
+              "Previous partner BPS before update"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "updated_bps",
+            "docs": [
+              "New partner BPS after update"
+            ],
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformAccumulatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "base_mint",
+            "docs": [
+              "Base mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "docs": [
+              "Quote mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "docs": [
+              "Pool"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_vault",
+            "docs": [
+              "Platform vault account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "accumulated",
+            "docs": [
+              "Amount added to platform's pending balance in this claim (quote units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_accumulated_fees",
+            "docs": [
+              "Current pending balance available to claim (quote units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "All-time accumulated into platform config before claims (quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "protocol",
+            "docs": [
+              "Source protocol that yielded these fees"
+            ],
+            "type": {
+              "defined": {
+                "name": "ClaimProtocol"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformClaimedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "platform_vault",
+            "docs": [
+              "Platform vault account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that initiated the claim"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed",
+            "docs": [
+              "Amount claimed from platform (quote units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed_fees",
+            "docs": [
+              "Cumulative amount the platform has claimed to date (quote units)"
+            ],
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Current program admin"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "docs": [
+              "Optional pending admin awaiting confirmation"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "platform_vault",
+            "docs": [
+              "Platform vault (receives bags fees)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_bps",
+            "docs": [
+              "Platform share in basis points (before distribution to partner)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "total_claimed_fees",
+            "docs": [
+              "Total claimed fees for the platform (cumulative, quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_accumulated_fees",
+            "docs": [
+              "Pending platform fees (sum of last protocol claims not yet claimed)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_lifetime_accumulated_fees",
+            "docs": [
+              "All-time fees accumulated into the platform config (quote units)"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "padding_0",
+            "docs": [
+              "Reserved for future use (8-byte aligned)"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                5
+              ]
+            }
+          },
+          {
+            "name": "padding_1",
+            "docs": [
+              "Reserved for future use (1-byte aligned)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfigAdminUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "program_config",
+            "docs": [
+              "Program config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "old_admin",
+            "docs": [
+              "Previous admin (before update)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "docs": [
+              "New admin (after update)"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfigInitializedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "program_config",
+            "docs": [
+              "Program config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_vault",
+            "docs": [
+              "Platform vault account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "platform_bps",
+            "docs": [
+              "Platform share in basis points"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin wallet that initialized the config"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfigUpdatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "program_config",
+            "docs": [
+              "Program config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "new_platform_bps",
+            "docs": [
+              "Platform share in basis points (after update)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "old_platform_bps",
+            "docs": [
+              "Previous platform share in basis points (before update)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "pending_admin",
+            "docs": [
+              "Pending admin (if any)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateFeeConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bps",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "finalize_update",
+            "docs": [
+              "Whether the update is finalized.",
+              "`true`: this is the final ix and wont be able to further update later",
+              "`false`: this is not the final ix and can be updated again later"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "from_idx",
+            "docs": [
+              "The index of the claimer to update from"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "to_idx",
+            "docs": [
+              "The index of the claimer to update to"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdatePartnerConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateProgramConfigParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pending_admin",
+            "docs": [
+              "Pending admin to update (None = don't update)",
+              "Pass in Pubkey::default() to clear"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "platform_bps",
+            "docs": [
+              "Platform BPS to update (None = don't update)"
+            ],
+            "type": {
+              "option": "u16"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

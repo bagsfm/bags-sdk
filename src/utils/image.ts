@@ -1,7 +1,7 @@
 /**
  * Image processing utilities for form-data compatibility
  */
-
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ImageInput = File | Blob | Buffer | { value: Buffer; options: { filename: string; contentType: string } } | any;
 
 export interface ImageFormDataOptions {

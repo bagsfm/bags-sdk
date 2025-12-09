@@ -1,17 +1,28 @@
 import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
-import type { BagsGetFeeShareWalletV2ApiResponse, BagsGetFeeShareWalletV2Response, BagsGetFeeShareWalletV2State, GetPoolConfigKeyByFeeClaimerVaultApiResponse, SupportedSocialProvider, TokenLaunchCreator } from '../types/api';
-import type { Program } from '@coral-xyz/anchor';
+import type {
+	BagsGetFeeShareWalletV2Response,
+	BagsGetFeeShareWalletV2State,
+	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
+	GetTokenClaimStatsV2Response,
+	SupportedSocialProvider,
+	TokenLaunchCreator,
+	TokenLaunchCreatorV3WithClaimStats,
+} from '../types/api';
+import type { BorshAccountsCoder, Program } from '@coral-xyz/anchor';
+import type { BagsFeeShare as BagsFeeShareIDL } from '../idl/fee-share-v2/idl';
 import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynamic-bonding-curve/idl';
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
 import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/bags-meteora-fee-claimer/idl';
 import { BagsApiClient } from '../api/bags-client';
-import { createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
+import { createBagsFeeShareV2Coder, createBagsFeeShareV2Program, createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
 
 export class StateService {
 	protected bagsApiClient: BagsApiClient;
 	protected dbcProgram: Program<DynamicBondingCurveIDL>;
 	protected dammV2Program: Program<DammV2IDL>;
 	protected bagsMeteoraFeeClaimer: Program<BagsMeteoraFeeClaimerIDL>;
+	protected bagsFeeShareV2: Program<BagsFeeShareIDL>;
+	protected bagsFeeShareV2Coder: BorshAccountsCoder;
 	protected connection: Connection;
 	protected commitment: Commitment;
 
@@ -20,6 +31,8 @@ export class StateService {
 		this.dbcProgram = createDbcProgram(connection, commitment).program;
 		this.dammV2Program = createDammV2Program(connection, commitment).program;
 		this.bagsMeteoraFeeClaimer = createBagsMeteoraFeeClaimerProgram(connection, commitment).program;
+		this.bagsFeeShareV2 = createBagsFeeShareV2Program(connection, commitment).program;
+		this.bagsFeeShareV2Coder = createBagsFeeShareV2Coder();
 		this.connection = connection;
 		this.commitment = commitment;
 	}
@@ -53,6 +66,14 @@ export class StateService {
 	 */
 	getBagsMeteoraFeeClaimerProgram() {
 		return this.bagsMeteoraFeeClaimer;
+	}
+
+	/**
+	 * Get Bags Fee Share V2 Program
+	 * @returns Program<BagsFeeShareIDL>
+	 */
+	getBagsFeeShareV2Program() {
+		return this.bagsFeeShareV2;
 	}
 
 	/**
@@ -111,18 +132,14 @@ export class StateService {
 	 * @returns The launch wallet
 	 */
 	async getLaunchWalletForTwitterUsername(twitterUsername: string): Promise<PublicKey> {
-		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2ApiResponse>('/token-launch/fee-share/wallet/v2', {
+		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>('/token-launch/fee-share/wallet/v2', {
 			params: {
 				username: twitterUsername,
 				provider: 'twitter',
 			},
 		});
 
-		if (!response.success) {
-			throw new Error('Failed to get launch wallet for twitter username');
-		}
-
-		return new PublicKey(response.response.wallet);
+		return new PublicKey(response.wallet);
 	}
 
 	/**
@@ -147,9 +164,29 @@ export class StateService {
 			}
 		);
 
-		const configKeys = response.poolConfigKeys.map((key) => new PublicKey(key));
+		const configKeys = response.poolConfigKeys.filter((key) => key !== null).map((key) => new PublicKey(key));
 
 		return configKeys;
+	}
+
+	/**
+	 * Get token claim stats
+	 *
+	 * @param tokenMint The mint of the token to get the claim stats for
+	 * @returns The creators with claim stats
+	 */
+	async getTokenClaimStats(tokenMint: PublicKey): Promise<Array<TokenLaunchCreatorV3WithClaimStats>> {
+		const response = await this.bagsApiClient.get<GetTokenClaimStatsV2Response>('/token-launch/claim-stats', {
+			params: {
+				tokenMint: tokenMint.toBase58(),
+			},
+		});
+
+		if (!response.success) {
+			throw new Error('Failed to get token claim stats');
+		}
+
+		return response.response;
 	}
 
 	/**

@@ -24,10 +24,12 @@ export class BagsApiClient {
 		return this.handleResponse(this.client.get<BagsApiResponse<T>>(url, config));
 	}
 
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
 		return this.handleResponse(this.client.post<BagsApiResponse<T>>(url, data, config));
 	}
 
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
 		return this.handleResponse(this.client.put<BagsApiResponse<T>>(url, data, config));
 	}
@@ -41,8 +43,10 @@ export class ApiError extends Error {
 	public url: string;
 	public method?: string;
 	public status?: number;
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	public data?: any;
 
+	/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 	constructor(message: string, config: AxiosRequestConfig, status?: number, data?: any) {
 		super(message);
 		this.name = 'ApiError';
@@ -69,6 +73,7 @@ export function createBagsAxiosInstance(baseUrl: string, apiKey: string, additio
 	);
 
 	axiosInstance.interceptors.response.use(
+		/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 		(res: AxiosResponse<BagsApiResponse<any>>) => {
 			return res;
 		},
@@ -77,6 +82,7 @@ export function createBagsAxiosInstance(baseUrl: string, apiKey: string, additio
 
 			let msg = 'An unexpected error occurred';
 			let status: number | undefined;
+			/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 			let payload: any;
 
 			if (err.response) {
