@@ -24,3 +24,14 @@ export const BAGS_FEE_SHARE_V1_PROGRAM_ID = BagsMeteoraFeeClaimerIDL.address as 
 export const BAGS_FEE_SHARE_V2_PROGRAM_ID = BagsFeeShareIDL.address as BagsFeeShare['address'];
 export const METEORA_DBC_PROGRAM_ID = DynamicBondingCurveIDL.address as DynamicBondingCurve['address'];
 export const METEORA_DAMM_V2_PROGRAM_ID = DammV2IDL.address as DammV2['address'];
+
+export const JITO_TIP_ACCOUNTS = [
+	new PublicKey('96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5'),
+	new PublicKey('HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe'),
+	new PublicKey('Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY'),
+	new PublicKey('ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49'),
+	new PublicKey('DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh'),
+	new PublicKey('ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt'),
+	new PublicKey('DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL'),
+	new PublicKey('3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT'),
+];
