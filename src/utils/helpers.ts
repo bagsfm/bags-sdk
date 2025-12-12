@@ -1,4 +1,6 @@
-import { BlockhashWithExpiryBlockHeight, Commitment, Connection, Keypair, VersionedTransaction } from '@solana/web3.js';
+import { BlockhashWithExpiryBlockHeight, Commitment, Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
+import bs58 from 'bs58';
+import { JITO_TIP_ACCOUNTS } from '../constants';
 
 export function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
@@ -83,17 +85,70 @@ export async function signAndSendTransaction(
 }
 
 /**
- * Serializes a Solana versioned transaction to a base64 string compatible with the Bags API.
- * Existing base64 strings are returned unchanged.
- * @param transaction - The versioned transaction instance or pre-serialized base64 string.
- * @returns The base64 encoded transaction string.
+ * Serializes a Solana versioned transaction to a base58 string compatible with the Bags API.
+ * Existing base58 strings are returned unchanged.
+ * @param transaction - The versioned transaction instance or pre-serialized base58 string.
+ * @returns The base58 encoded transaction string.
  */
 export function serializeVersionedTransaction(transaction: VersionedTransaction | string): string {
 	if (typeof transaction === 'string') {
+		// Validate if the transaction is a valid base58 string
+		if (!bs58.decodeUnsafe(transaction)) {
+			throw new Error('Invalid base58 string');
+		}
+
 		return transaction;
 	}
 
 	const serialized = transaction.serialize();
 
-	return Buffer.from(serialized).toString('base64');
+	return bs58.encode(serialized);
+}
+
+/**
+ * Builds a tip transaction message ready for signing. Defaults to using a random Jito
+ * tip account, but callers can provide any compatible tip destination.
+ * @param connection - The connection to use to get the latest blockhash
+ * @param commitment - The commitment to use for the transaction
+ * @param payer - The payer of the transaction
+ * @param tipLamports - The amount of lamports to tip
+ * @param options (optional) - The options for the tip transaction
+ * @returns The tip transaction
+ */
+export async function createTipTransaction(
+	connection: Connection,
+	commitment: Commitment,
+	payer: PublicKey,
+	tipLamports: number,
+	options: {
+		tipAccount?: PublicKey;
+		blockhash?: string;
+	} = {}
+): Promise<VersionedTransaction> {
+	if (tipLamports <= 0) {
+		throw new Error('Tip lamports must be greater than zero.');
+	}
+
+	const availableTipAccounts = JITO_TIP_ACCOUNTS;
+	const tipAccount = options.tipAccount ?? availableTipAccounts[Math.floor(Math.random() * availableTipAccounts.length)];
+
+	if (!tipAccount) {
+		throw new Error('No tip account provided and no default tip accounts available.');
+	}
+
+	const recentBlockhash = options.blockhash ?? (await connection.getLatestBlockhash(commitment)).blockhash;
+
+	const tipInstruction = SystemProgram.transfer({
+		fromPubkey: payer,
+		toPubkey: tipAccount,
+		lamports: tipLamports,
+	});
+
+	const transactionMessage = new TransactionMessage({
+		payerKey: payer,
+		recentBlockhash,
+		instructions: [tipInstruction],
+	}).compileToV0Message();
+
+	return new VersionedTransaction(transactionMessage);
 }
