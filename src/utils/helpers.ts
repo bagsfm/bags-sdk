@@ -1,6 +1,8 @@
 import { BlockhashWithExpiryBlockHeight, Commitment, Connection, Keypair, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { JITO_TIP_ACCOUNTS } from '../constants';
+import { JitoRegion } from '../types';
+import { BagsSDK } from '../client';
 
 export function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => globalThis.setTimeout(resolve, ms));
@@ -151,4 +153,46 @@ export async function createTipTransaction(
 	}).compileToV0Message();
 
 	return new VersionedTransaction(transactionMessage);
+}
+
+/**
+ * Send a bundle and wait for confirmation
+ * @param signedTransactions - Array of signed VersionedTransaction instances
+ * @param sdk - The Bags SDK instance
+ * @param region - Jito region to send the bundle to
+ * @returns The successfully confirmed bundle ID
+ */
+export async function sendBundleAndConfirm(signedTransactions: VersionedTransaction[], sdk: BagsSDK, region: JitoRegion = 'mainnet'): Promise<string> {
+	const bundleId = await sdk.solana.sendBundle(signedTransactions, region);
+
+	const maxRetries = 10;
+	const retryDelayMs = 500;
+
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
+		const statusResponse = await sdk.solana.getBundleStatuses([bundleId], region);
+
+		if (statusResponse?.value?.length && statusResponse.value[0] != null) {
+			const bundleStatus = statusResponse.value[0];
+			const { confirmation_status, err, transactions } = bundleStatus;
+
+			if (confirmation_status === 'confirmed' || confirmation_status === 'finalized') {
+				// Check for bundle errors
+				const isSuccess = err == null || err.Ok == null;
+
+				if (!isSuccess) {
+					throw new Error('Bundle transactions failed with error');
+				}
+
+				if (!transactions?.length) {
+					throw new Error('Bundle confirmed but no transactions found');
+				}
+
+				return bundleId;
+			}
+		}
+
+		await sleep(retryDelayMs);
+	}
+
+	throw new Error(`Bundle confirmation timed out after ${maxRetries} attempts`);
 }
