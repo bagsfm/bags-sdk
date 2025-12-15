@@ -201,7 +201,7 @@ async function resolveFeeClaimers(
 		const walletResults = await sdk.state.getLaunchWalletV2Bulk(feeClaimerInputs.map((fc) => ({ username: fc.username, provider: fc.provider })));
 
 		for (const input of feeClaimerInputs) {
-			const result = walletResults.find((r) => r.username === input.username && r.provider === input.provider);
+			const result = walletResults.find((r) => r.username.toLowerCase() === input.username.toLowerCase() && r.provider.toLowerCase() === input.provider.toLowerCase());
 
 			if (!result?.wallet) {
 				throw new Error(`Failed to resolve wallet for ${input.provider}:${input.username}`);
