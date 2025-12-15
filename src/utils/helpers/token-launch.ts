@@ -268,7 +268,7 @@ export async function launchToken(sdk: BagsSDK, keypair: Keypair, params: Launch
 		...(isImageUrl ? { imageUrl: params.image as string } : { image: params.image as ImageInput }),
 		name: params.name,
 		description: params.description,
-		symbol: params.symbol.toUpperCase().replace('$', ''),
+		symbol: params.symbol.toUpperCase(),
 		twitter: params.twitterUrl,
 		website: params.websiteUrl,
 		telegram: params.telegramUrl,
