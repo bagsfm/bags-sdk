@@ -1,7 +1,10 @@
 import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
 import type {
+	BagsGetFeeShareWalletV2BulkResponseItem,
+	BagsGetFeeShareWalletV2BulkStateItem,
 	BagsGetFeeShareWalletV2Response,
 	BagsGetFeeShareWalletV2State,
+	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimStatsV2Response,
 	SupportedSocialProvider,
@@ -213,6 +216,30 @@ export class StateService {
 			};
 		} catch (error: unknown) {
 			throw new Error(`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`);
+		}
+	}
+
+	/**
+	 * Get launch wallets for multiple social usernames
+	 *
+	 * @param items The usernames and providers to fetch launch wallets for
+	 * @returns The launch wallets state for each requested user
+	 * @throws Error if the request fails or the response indicates failure
+	 */
+	async getLaunchWalletV2Bulk(items: Array<GetLaunchWalletV2BulkRequestItem>): Promise<Array<BagsGetFeeShareWalletV2BulkStateItem>> {
+		try {
+			const response = await this.bagsApiClient.post<Array<BagsGetFeeShareWalletV2BulkResponseItem>>('/token-launch/fee-share/wallet/v2/bulk', {
+				items,
+			});
+
+			return response.map((item) => ({
+				username: item.username,
+				provider: item.provider,
+				platformData: item.platformData,
+				wallet: item.wallet ? new PublicKey(item.wallet) : null,
+			}));
+		} catch (error: unknown) {
+			throw new Error(`Failed to get launch wallets in bulk: ${(error as Error)?.message}`);
 		}
 	}
 }
