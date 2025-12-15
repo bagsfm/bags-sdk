@@ -37,6 +37,20 @@ describe('StateService integration', () => {
 		expect(v2Result.wallet.equals(legacyWallet)).toBe(true);
 	});
 
+	test('getLaunchWalletV2Bulk returns consistent results with the single fetch', async () => {
+		const { state } = getTestSdk();
+		const legacyWallet = await state.getLaunchWalletForTwitterUsername(testEnv.socialUsername);
+		const [bulkResult] = await state.getLaunchWalletV2Bulk([{ username: testEnv.socialUsername, provider: 'twitter' }]);
+		const singleResult = await state.getLaunchWalletV2(testEnv.socialUsername, 'twitter');
+
+		expect(bulkResult).toBeDefined();
+		expect(bulkResult.provider).toBe('twitter');
+		expect(bulkResult.wallet).not.toBeNull();
+		expect(bulkResult.wallet).toBeInstanceOf(PublicKey);
+		expect(bulkResult.wallet?.equals(singleResult.wallet)).toBe(true);
+		expect(bulkResult.wallet?.equals(legacyWallet)).toBe(true);
+	});
+
 	test('program getters expose expected program ids', () => {
 		const { state } = getTestSdk();
 

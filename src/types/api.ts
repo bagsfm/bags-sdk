@@ -101,3 +101,22 @@ export type GetTokenClaimStatsV2Response = {
 	success: true;
 	response: Array<TokenLaunchCreatorV3WithClaimStats>;
 };
+
+export type GetLaunchWalletV2BulkRequestItem = {
+	username: string;
+	provider: SupportedSocialProvider;
+};
+
+export type BagsGetFeeShareWalletV2BulkResponseItem = {
+	username: string;
+	provider: BagsGetFeeShareWalletV2Response['provider'];
+	platformData: BagsGetFeeShareWalletV2Response['platformData'] | null;
+	wallet: string | null;
+};
+
+export type BagsGetFeeShareWalletV2BulkStateItem = {
+	username: string;
+	provider: BagsGetFeeShareWalletV2State['provider'];
+	platformData: BagsGetFeeShareWalletV2State['platformData'] | null;
+	wallet: BagsGetFeeShareWalletV2State['wallet'] | null;
+};
