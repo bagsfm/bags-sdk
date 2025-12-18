@@ -239,7 +239,7 @@
             "Singleton program config PDA (holds admin pubkey)"
           ],
           "writable": true,
-          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+          "address": "8SrW8DjZcAPAWYSdSu468LKLQ7WDRaEUsswNvHCiAYs"
         },
         {
           "name": "platform_vault",
@@ -247,7 +247,7 @@
             "Platform vault (receives bags fees)"
           ],
           "writable": true,
-          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+          "address": "ERH2UUYzUULwKy7sLHxeEGcN4B2QjDoQS8Z8GMhuL8cE"
         },
         {
           "name": "partner_config",
@@ -794,7 +794,7 @@
             "Singleton program config PDA (holds admin pubkey)"
           ],
           "writable": true,
-          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+          "address": "8SrW8DjZcAPAWYSdSu468LKLQ7WDRaEUsswNvHCiAYs"
         },
         {
           "name": "platform_vault",
@@ -802,7 +802,7 @@
             "Platform vault (receives bags fees)"
           ],
           "writable": true,
-          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+          "address": "ERH2UUYzUULwKy7sLHxeEGcN4B2QjDoQS8Z8GMhuL8cE"
         },
         {
           "name": "base_mint",
