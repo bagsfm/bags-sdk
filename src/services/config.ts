@@ -84,7 +84,7 @@ export class ConfigService extends BaseService {
 									lamports: tipConfig.tipLamports,
 								})
 							: undefined,
-					],
+					].filter(Boolean),
 				}).compileToV0Message()
 			);
 
