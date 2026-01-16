@@ -6,8 +6,10 @@ import type {
 	BagsGetFeeShareWalletV2State,
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
+	GetTokenClaimEventsSuccessResponse,
 	GetTokenClaimStatsV2Response,
 	SupportedSocialProvider,
+	TokenClaimEvent,
 	TokenLaunchCreator,
 	TokenLaunchCreatorV3WithClaimStats,
 } from '../types/api';
@@ -190,6 +192,40 @@ export class StateService {
 		}
 
 		return response.response;
+	}
+
+	/**
+	 * Get token claim events
+	 *
+	 * @param tokenMint The mint of the token to fetch claim events for
+	 * @param options Optional pagination configuration
+	 * @returns The token claim events
+	 */
+	async getTokenClaimEvents(tokenMint: PublicKey, options: { limit?: number; offset?: number } = {}): Promise<Array<TokenClaimEvent>> {
+		if (!(tokenMint instanceof PublicKey)) {
+			throw new Error('tokenMint must be a PublicKey');
+		}
+
+		const limit = options.limit ?? 100;
+		const offset = options.offset ?? 0;
+
+		if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+			throw new Error('limit must be an integer between 1 and 100');
+		}
+
+		if (!Number.isInteger(offset) || offset < 0) {
+			throw new Error('offset must be a non-negative integer');
+		}
+
+		const response = await this.bagsApiClient.get<GetTokenClaimEventsSuccessResponse>('/fee-share/token/claim-events', {
+			params: {
+				tokenMint: tokenMint.toBase58(),
+				limit,
+				offset,
+			},
+		});
+
+		return response.events;
 	}
 
 	/**
