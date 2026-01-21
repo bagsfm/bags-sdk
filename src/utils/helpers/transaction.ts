@@ -5,6 +5,7 @@ import {
 	Keypair,
 	PublicKey,
 	SystemProgram,
+	Transaction,
 	TransactionMessage,
 	VersionedTransaction,
 } from '@solana/web3.js';
@@ -17,24 +18,31 @@ import { sleep } from './common';
 export async function signAndSendTransaction(
 	connection: Connection,
 	commitment: Commitment,
-	transaction: VersionedTransaction,
+	transaction: VersionedTransaction | Transaction,
 	keypair: Keypair,
 	blockhash?: BlockhashWithExpiryBlockHeight
 ): Promise<string> {
-	transaction.sign([keypair]);
-
 	let finalBlockhash = blockhash;
 
 	if (!blockhash) {
 		finalBlockhash = await connection.getLatestBlockhash(commitment);
-	} else {
-		finalBlockhash = blockhash;
 	}
 
-	const signature = await connection.sendTransaction(transaction, {
-		skipPreflight: true,
-		maxRetries: 0,
-	});
+	let signature: string;
+
+	if (transaction instanceof VersionedTransaction) {
+		transaction.sign([keypair]);
+		signature = await connection.sendTransaction(transaction, {
+			skipPreflight: true,
+			maxRetries: 0,
+		});
+	} else {
+		transaction.sign(keypair);
+		signature = await connection.sendRawTransaction(transaction.serialize(), {
+			skipPreflight: true,
+			maxRetries: 0,
+		});
+	}
 
 	const confirmed = await connection.confirmTransaction(
 		{
@@ -100,7 +108,8 @@ export async function createTipTransaction(
 	}
 
 	const availableTipAccounts = JITO_TIP_ACCOUNTS;
-	const tipAccount = options.tipAccount ?? availableTipAccounts[Math.floor(Math.random() * availableTipAccounts.length)];
+	const tipAccount =
+		options.tipAccount ?? availableTipAccounts[Math.floor(Math.random() * availableTipAccounts.length)];
 
 	if (!tipAccount) {
 		throw new Error('No tip account provided and no default tip accounts available.');
@@ -130,7 +139,11 @@ export async function createTipTransaction(
  * @param region - Jito region to send the bundle to
  * @returns The successfully confirmed bundle ID
  */
-export async function sendBundleAndConfirm(signedTransactions: VersionedTransaction[], sdk: BagsSDK, region: JitoRegion = 'mainnet'): Promise<string> {
+export async function sendBundleAndConfirm(
+	signedTransactions: VersionedTransaction[],
+	sdk: BagsSDK,
+	region: JitoRegion = 'mainnet'
+): Promise<string> {
 	const bundleId = await sdk.solana.sendBundle(signedTransactions, region);
 
 	const maxRetries = 10;
@@ -164,4 +177,3 @@ export async function sendBundleAndConfirm(signedTransactions: VersionedTransact
 
 	throw new Error(`Bundle confirmation timed out after ${maxRetries} attempts`);
 }
-

@@ -1,7 +1,13 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { BaseService } from './base';
-import { CreateSwapTransactionParams, CreateSwapTransactionResult, GetTradeQuoteParams, TradeQuoteResponse, TradeSwapTransactionResponse } from '../types';
+import {
+	CreateSwapTransactionParams,
+	CreateSwapTransactionResult,
+	GetTradeQuoteParams,
+	TradeQuoteResponse,
+	TradeSwapTransactionResponse,
+} from '../types';
 import { validateAndNormalizeGetTradeQuoteParams } from '../utils/validations';
 
 export class TradeService extends BaseService {

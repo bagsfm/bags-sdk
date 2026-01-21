@@ -7,7 +7,12 @@ import { sleep } from './common';
  * @param slotsToPass - Number of slots to wait for
  * @param pollIntervalMs - Polling interval in milliseconds (default: 400ms)
  */
-export async function waitForSlotsToPass(connection: Connection, commitment: Commitment, slotsToPass: number = 1, pollIntervalMs: number = 400): Promise<void> {
+export async function waitForSlotsToPass(
+	connection: Connection,
+	commitment: Commitment,
+	slotsToPass: number = 1,
+	pollIntervalMs: number = 400
+): Promise<void> {
 	try {
 		// Get the initial slot
 		const initialSlot = await connection.getSlot(commitment);

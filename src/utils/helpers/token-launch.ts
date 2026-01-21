@@ -71,7 +71,11 @@ export interface LaunchTokenResult {
 /**
  * Sends a bundle with a Jito tip transaction prepended
  */
-async function sendBundleWithTip(unsignedTransactions: VersionedTransaction[], keypair: Keypair, sdk: BagsSDK): Promise<string> {
+async function sendBundleWithTip(
+	unsignedTransactions: VersionedTransaction[],
+	keypair: Keypair,
+	sdk: BagsSDK
+): Promise<string> {
 	const connection = sdk.state.getConnection();
 	const commitment = sdk.state.getCommitment();
 
@@ -83,19 +87,16 @@ async function sendBundleWithTip(unsignedTransactions: VersionedTransaction[], k
 
 	let jitoTip = DEFAULT_JITO_TIP_LAMPORTS;
 
-	// Get recommended Jito tip
 	const recommendedJitoTip = await sdk.solana.getJitoRecentFees().catch((): null => null);
 
 	if (recommendedJitoTip?.landed_tips_95th_percentile) {
 		jitoTip = Math.floor(recommendedJitoTip.landed_tips_95th_percentile * LAMPORTS_PER_SOL);
 	}
 
-	// Create tip transaction
 	const tipTransaction = await createTipTransaction(connection, commitment, keypair.publicKey, jitoTip, {
 		blockhash: bundleBlockhash,
 	});
 
-	// Sign all transactions (tip first, then the rest)
 	const signedTransactions = [tipTransaction, ...unsignedTransactions].map((tx) => {
 		tx.sign([keypair]);
 		return tx;
@@ -118,7 +119,6 @@ async function getOrCreateFeeShareConfig(
 	const connection = sdk.state.getConnection();
 	const commitment = sdk.state.getCommitment();
 
-	// Check if lookup tables are needed
 	let additionalLookupTables: PublicKey[] | undefined;
 
 	if (feeClaimers.length > BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT) {
@@ -132,13 +132,10 @@ async function getOrCreateFeeShareConfig(
 			throw new Error('Failed to create lookup table transactions');
 		}
 
-		// Execute LUT creation transaction
 		await signAndSendTransaction(connection, commitment, lutResult.creationTransaction, keypair);
 
-		// Wait for one slot (required before extending LUT)
 		await waitForSlotsToPass(connection, commitment, 1);
 
-		// Execute all extend transactions
 		for (const extendTx of lutResult.extendTransactions) {
 			await signAndSendTransaction(connection, commitment, extendTx, keypair);
 		}
@@ -146,7 +143,6 @@ async function getOrCreateFeeShareConfig(
 		additionalLookupTables = lutResult.lutAddresses;
 	}
 
-	// Create the config
 	const configResult = await sdk.config.createBagsFeeShareConfig({
 		payer: keypair.publicKey,
 		baseMint: tokenMint,
@@ -156,14 +152,12 @@ async function getOrCreateFeeShareConfig(
 		additionalLookupTables,
 	});
 
-	// Send bundle transactions if any
 	if (configResult.bundles?.length) {
 		for (const bundle of configResult.bundles) {
 			await sendBundleWithTip(bundle, keypair, sdk);
 		}
 	}
 
-	// Send regular transactions if any
 	for (const tx of configResult.transactions || []) {
 		await signAndSendTransaction(connection, commitment, tx, keypair);
 	}
@@ -189,19 +183,33 @@ async function resolveFeeClaimers(
 		throw new Error(`Total BPS (creatorBps + feeClaimers) must equal exactly 10000 (100%), got ${totalBps}`);
 	}
 
-	// Build fee claimers array, starting with creator
+	if (creatorBps < 0 || creatorBps > 10000) {
+		throw new Error(`Creator BPS must be between 0 and 10000, got ${creatorBps}`);
+	}
+
+	if (feeClaimerInputs?.some((fc) => fc.bps < 0 || fc.bps > 10000)) {
+		throw new Error(
+			`Fee claimer BPS must be between 0 and 10000, got ${feeClaimerInputs.find((fc) => fc.bps < 0 || fc.bps > 10000)?.bps}`
+		);
+	}
+
 	const feeClaimers: Array<{ user: PublicKey; userBps: number }> = [];
 
 	if (creatorBps > 0) {
 		feeClaimers.push({ user: creatorWallet, userBps: creatorBps });
 	}
 
-	// Resolve and add other fee claimers if any
 	if (feeClaimerInputs?.length) {
-		const walletResults = await sdk.state.getLaunchWalletV2Bulk(feeClaimerInputs.map((fc) => ({ username: fc.username, provider: fc.provider })));
+		const walletResults = await sdk.state.getLaunchWalletV2Bulk(
+			feeClaimerInputs.map((fc) => ({ username: fc.username, provider: fc.provider }))
+		);
 
 		for (const input of feeClaimerInputs) {
-			const result = walletResults.find((r) => r.username.toLowerCase() === input.username.toLowerCase() && r.provider.toLowerCase() === input.provider.toLowerCase());
+			const result = walletResults.find(
+				(r) =>
+					r.username.toLowerCase() === input.username.toLowerCase() &&
+					r.provider.toLowerCase() === input.provider.toLowerCase()
+			);
 
 			if (!result?.wallet) {
 				throw new Error(`Failed to resolve wallet for ${input.provider}:${input.username}`);
@@ -257,7 +265,11 @@ async function resolveFeeClaimers(
  * });
  * ```
  */
-export async function launchToken(sdk: BagsSDK, keypair: Keypair, params: LaunchTokenParams): Promise<LaunchTokenResult> {
+export async function launchToken(
+	sdk: BagsSDK,
+	keypair: Keypair,
+	params: LaunchTokenParams
+): Promise<LaunchTokenResult> {
 	const connection = sdk.state.getConnection();
 	const commitment = sdk.state.getCommitment();
 
@@ -279,7 +291,14 @@ export async function launchToken(sdk: BagsSDK, keypair: Keypair, params: Launch
 	// Step 2: Resolve fee claimers and create config
 	const feeClaimers = await resolveFeeClaimers(sdk, keypair.publicKey, params.creatorBps, params.feeClaimers);
 
-	const configKey = await getOrCreateFeeShareConfig(sdk, keypair, tokenMint, feeClaimers, params.partner, params.partnerConfig);
+	const configKey = await getOrCreateFeeShareConfig(
+		sdk,
+		keypair,
+		tokenMint,
+		feeClaimers,
+		params.partner,
+		params.partnerConfig
+	);
 
 	// Step 3: Create and send launch transaction
 	const launchTransaction = await sdk.tokenLaunch.createLaunchTransaction({

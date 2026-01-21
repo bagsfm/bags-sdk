@@ -18,15 +18,18 @@ export class TokenLaunchService extends BaseService {
 	 * @returns The token launch transaction
 	 */
 	async createLaunchTransaction(params: CreateLaunchTransactionParams): Promise<VersionedTransaction> {
-		const encodedSignedTransaction = await this.bagsApiClient.post<string>('/token-launch/create-launch-transaction', {
-			ipfs: params.metadataUrl,
-			tokenMint: params.tokenMint.toBase58(),
-			wallet: params.launchWallet.toBase58(),
-			initialBuyLamports: params.initialBuyLamports,
-			configKey: params.configKey.toBase58(),
-			tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
-			tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
-		});
+		const encodedSignedTransaction = await this.bagsApiClient.post<string>(
+			'/token-launch/create-launch-transaction',
+			{
+				ipfs: params.metadataUrl,
+				tokenMint: params.tokenMint.toBase58(),
+				wallet: params.launchWallet.toBase58(),
+				initialBuyLamports: params.initialBuyLamports,
+				configKey: params.configKey.toBase58(),
+				tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
+				tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
+			}
+		);
 
 		const decodedSignedTransaction = bs58.decode(encodedSignedTransaction);
 		const launchTransaction = VersionedTransaction.deserialize(decodedSignedTransaction);
@@ -79,11 +82,15 @@ export class TokenLaunchService extends BaseService {
 			formData.append('metadataUrl', normalized.metadataUrl);
 		}
 
-		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>('/token-launch/create-token-info', formData, {
-			headers: {
-				...formData.getHeaders(),
-			},
-		});
+		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>(
+			'/token-launch/create-token-info',
+			formData,
+			{
+				headers: {
+					...formData.getHeaders(),
+				},
+			}
+		);
 
 		return response;
 	}
