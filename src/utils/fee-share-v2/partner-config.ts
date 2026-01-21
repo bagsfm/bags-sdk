@@ -65,6 +65,9 @@ export const fetchBagsFeeShareV2PartnerConfig = async (
 };
 
 export function deriveBagsFeeShareV2PartnerConfigPda(partner: PublicKey): PublicKey {
-	const [partnerConfig] = PublicKey.findProgramAddressSync([Buffer.from('partner_config'), partner.toBuffer()], new PublicKey(BAGS_FEE_SHARE_V2_PROGRAM_ID));
+	const [partnerConfig] = PublicKey.findProgramAddressSync(
+		[Buffer.from('partner_config'), partner.toBuffer()],
+		new PublicKey(BAGS_FEE_SHARE_V2_PROGRAM_ID)
+	);
 	return partnerConfig;
 }

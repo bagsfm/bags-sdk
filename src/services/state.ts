@@ -19,7 +19,13 @@ import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynam
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
 import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/bags-meteora-fee-claimer/idl';
 import { BagsApiClient } from '../api/bags-client';
-import { createBagsFeeShareV2Coder, createBagsFeeShareV2Program, createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
+import {
+	createBagsFeeShareV2Coder,
+	createBagsFeeShareV2Program,
+	createBagsMeteoraFeeClaimerProgram,
+	createDammV2Program,
+	createDbcProgram,
+} from '../utils/create-program';
 
 export class StateService {
 	protected bagsApiClient: BagsApiClient;
@@ -137,12 +143,15 @@ export class StateService {
 	 * @returns The launch wallet
 	 */
 	async getLaunchWalletForTwitterUsername(twitterUsername: string): Promise<PublicKey> {
-		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>('/token-launch/fee-share/wallet/v2', {
-			params: {
-				username: twitterUsername,
-				provider: 'twitter',
-			},
-		});
+		const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>(
+			'/token-launch/fee-share/wallet/v2',
+			{
+				params: {
+					username: twitterUsername,
+					provider: 'twitter',
+				},
+			}
+		);
 
 		return new PublicKey(response.wallet);
 	}
@@ -201,7 +210,10 @@ export class StateService {
 	 * @param options Optional pagination configuration
 	 * @returns The token claim events
 	 */
-	async getTokenClaimEvents(tokenMint: PublicKey, options: { limit?: number; offset?: number } = {}): Promise<Array<TokenClaimEvent>> {
+	async getTokenClaimEvents(
+		tokenMint: PublicKey,
+		options: { limit?: number; offset?: number } = {}
+	): Promise<Array<TokenClaimEvent>> {
 		if (!(tokenMint instanceof PublicKey)) {
 			throw new Error('tokenMint must be a PublicKey');
 		}
@@ -217,13 +229,16 @@ export class StateService {
 			throw new Error('offset must be a non-negative integer');
 		}
 
-		const response = await this.bagsApiClient.get<GetTokenClaimEventsSuccessResponse>('/fee-share/token/claim-events', {
-			params: {
-				tokenMint: tokenMint.toBase58(),
-				limit,
-				offset,
-			},
-		});
+		const response = await this.bagsApiClient.get<GetTokenClaimEventsSuccessResponse>(
+			'/fee-share/token/claim-events',
+			{
+				params: {
+					tokenMint: tokenMint.toBase58(),
+					limit,
+					offset,
+				},
+			}
+		);
 
 		return response.events;
 	}
@@ -236,14 +251,20 @@ export class StateService {
 	 * @returns The launch wallet
 	 * @throws Error if the request fails or the response indicates failure
 	 */
-	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider): Promise<BagsGetFeeShareWalletV2State> {
+	async getLaunchWalletV2(
+		username: string,
+		provider: SupportedSocialProvider
+	): Promise<BagsGetFeeShareWalletV2State> {
 		try {
-			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>('/token-launch/fee-share/wallet/v2', {
-				params: {
-					username,
-					provider,
-				},
-			});
+			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>(
+				'/token-launch/fee-share/wallet/v2',
+				{
+					params: {
+						username,
+						provider,
+					},
+				}
+			);
 
 			return {
 				platformData: response.platformData,
@@ -251,7 +272,9 @@ export class StateService {
 				wallet: new PublicKey(response.wallet),
 			};
 		} catch (error: unknown) {
-			throw new Error(`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`);
+			throw new Error(
+				`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`
+			);
 		}
 	}
 
@@ -262,11 +285,16 @@ export class StateService {
 	 * @returns The launch wallets state for each requested user
 	 * @throws Error if the request fails or the response indicates failure
 	 */
-	async getLaunchWalletV2Bulk(items: Array<GetLaunchWalletV2BulkRequestItem>): Promise<Array<BagsGetFeeShareWalletV2BulkStateItem>> {
+	async getLaunchWalletV2Bulk(
+		items: Array<GetLaunchWalletV2BulkRequestItem>
+	): Promise<Array<BagsGetFeeShareWalletV2BulkStateItem>> {
 		try {
-			const response = await this.bagsApiClient.post<Array<BagsGetFeeShareWalletV2BulkResponseItem>>('/token-launch/fee-share/wallet/v2/bulk', {
-				items,
-			});
+			const response = await this.bagsApiClient.post<Array<BagsGetFeeShareWalletV2BulkResponseItem>>(
+				'/token-launch/fee-share/wallet/v2/bulk',
+				{
+					items,
+				}
+			);
 
 			return response.map((item) => ({
 				username: item.username,

@@ -1,4 +1,13 @@
-import { AddressLookupTableProgram, Commitment, ComputeBudgetProgram, Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
+import {
+	AddressLookupTableProgram,
+	Commitment,
+	ComputeBudgetProgram,
+	Connection,
+	PublicKey,
+	SystemProgram,
+	TransactionMessage,
+	VersionedTransaction,
+} from '@solana/web3.js';
 import { BaseService } from './base';
 import type { BagsGetOrCreateFeeShareConfigArgs, TransactionTipConfig } from '../types/api';
 import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../constants';
@@ -15,7 +24,11 @@ export class ConfigService extends BaseService {
 	async getConfigCreationLookupTableTransactions(
 		args: Exclude<BagsGetOrCreateFeeShareConfigArgs, 'additionalLookupTables'>,
 		tipConfig?: TransactionTipConfig
-	): Promise<{ creationTransaction: VersionedTransaction; extendTransactions: Array<VersionedTransaction>; lutAddresses: Array<PublicKey> } | null> {
+	): Promise<{
+		creationTransaction: VersionedTransaction;
+		extendTransactions: Array<VersionedTransaction>;
+		lutAddresses: Array<PublicKey>;
+	} | null> {
 		if (args.feeClaimers.length <= BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT) {
 			console.warn('A lookup table is not needed for this config creation');
 			return null;
@@ -108,9 +121,16 @@ export class ConfigService extends BaseService {
 	async createBagsFeeShareConfig(
 		args: BagsGetOrCreateFeeShareConfigArgs,
 		tipConfig?: TransactionTipConfig
-	): Promise<{ transactions: Array<VersionedTransaction>; bundles: Array<Array<VersionedTransaction>>; meteoraConfigKey: PublicKey }> {
+	): Promise<{
+		transactions: Array<VersionedTransaction>;
+		bundles: Array<Array<VersionedTransaction>>;
+		meteoraConfigKey: PublicKey;
+	}> {
 		const normalizedParams = validateAndNormalizeCreateFeeShareConfigParams(args, tipConfig);
-		const response = await this.bagsApiClient.post<GetOrCreateConfigApiResponse>('/fee-share/config', normalizedParams);
+		const response = await this.bagsApiClient.post<GetOrCreateConfigApiResponse>(
+			'/fee-share/config',
+			normalizedParams
+		);
 
 		if (!response.needsCreation) {
 			throw new Error('Config already exists');

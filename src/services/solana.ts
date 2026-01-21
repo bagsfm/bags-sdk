@@ -16,7 +16,10 @@ export class SolanaService extends BaseService {
 	 * @returns The bundle identifier string assigned by the Bags API.
 	 * @throws Error when no transactions are provided or the region is unsupported.
 	 */
-	async sendBundle(transactions: Array<VersionedTransaction | string>, region: JitoRegion = 'mainnet'): Promise<string> {
+	async sendBundle(
+		transactions: Array<VersionedTransaction | string>,
+		region: JitoRegion = 'mainnet'
+	): Promise<string> {
 		if (!transactions.length) {
 			throw new Error('At least one transaction is required to send a bundle');
 		}
@@ -40,7 +43,10 @@ export class SolanaService extends BaseService {
 	 * @returns The bundle status payload returned by the Bags API or `null` when unavailable.
 	 * @throws Error when no bundle IDs are provided or the region is unsupported.
 	 */
-	async getBundleStatuses(bundleIds: Array<string>, region: JitoRegion = 'mainnet'): Promise<BundleStatusesResponse | null> {
+	async getBundleStatuses(
+		bundleIds: Array<string>,
+		region: JitoRegion = 'mainnet'
+	): Promise<BundleStatusesResponse | null> {
 		if (!bundleIds.length) {
 			throw new Error('At least one bundle ID is required to fetch bundle statuses');
 		}

@@ -5,7 +5,11 @@ import { BAGS_PUBLIC_API_V2_DEFAULT_BASE_URL } from '../constants';
 export class BagsApiClient {
 	private client: AxiosInstance;
 
-	constructor(apiKey: string, baseUrl: string = BAGS_PUBLIC_API_V2_DEFAULT_BASE_URL, options: Partial<AxiosRequestConfig> = {}) {
+	constructor(
+		apiKey: string,
+		baseUrl: string = BAGS_PUBLIC_API_V2_DEFAULT_BASE_URL,
+		options: Partial<AxiosRequestConfig> = {}
+	) {
 		this.client = createBagsAxiosInstance(baseUrl, apiKey, options);
 	}
 
@@ -57,7 +61,11 @@ export class ApiError extends Error {
 	}
 }
 
-export function createBagsAxiosInstance(baseUrl: string, apiKey: string, additionalAxiosConfig: Partial<AxiosRequestConfig> = {}): AxiosInstance {
+export function createBagsAxiosInstance(
+	baseUrl: string,
+	apiKey: string,
+	additionalAxiosConfig: Partial<AxiosRequestConfig> = {}
+): AxiosInstance {
 	const axiosInstance = axios.create({
 		baseURL: baseUrl,
 		timeout: 60_000,

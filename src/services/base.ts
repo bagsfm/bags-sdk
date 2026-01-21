@@ -3,7 +3,13 @@ import type { DynamicBondingCurve as DynamicBondingCurveIDL } from '../idl/dynam
 import type { DammV2 as DammV2IDL } from '../idl/damm-v2/idl';
 import type { BagsMeteoraFeeClaimer as BagsMeteoraFeeClaimerIDL } from '../idl/bags-meteora-fee-claimer/idl';
 import { Commitment, Connection } from '@solana/web3.js';
-import { createBagsFeeShareV2Coder, createBagsFeeShareV2Program, createBagsMeteoraFeeClaimerProgram, createDammV2Program, createDbcProgram } from '../utils/create-program';
+import {
+	createBagsFeeShareV2Coder,
+	createBagsFeeShareV2Program,
+	createBagsMeteoraFeeClaimerProgram,
+	createDammV2Program,
+	createDbcProgram,
+} from '../utils/create-program';
 import { BagsApiClient } from '../api/bags-client';
 import { StateService } from './state';
 import type { BagsFeeShare as BagsFeeShareIDL } from '../idl/fee-share-v2/idl';
