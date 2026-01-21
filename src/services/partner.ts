@@ -64,11 +64,16 @@ export class PartnerService extends BaseService {
 	}
 
 	/**
-	 * Get the partner config claim transactions for a partner
+	 * Get the partner config claim transactions for a partner.
+	 *
 	 * @param partner - The wallet of the partner
 	 * @returns The partner config claim transactions and blockhashes
+	 *
+	 * Note: The returned array of transactions should be handled as follows:
+	 *   - The last transaction in the array must be executed last, as it claims the SOL from the user vault.
+	 *   - All other transactions (if present) can be processed in parallel or any order before the last one.
 	 */
-	async getPartnerConfigClaimTransactions(partner: PublicKey) {
+	async getPartnerConfigClaimTransactions(partner: PublicKey): Promise<Array<{ transaction: VersionedTransaction; blockhash: BlockhashWithExpiryBlockHeight }>> {
 		const response = await this.bagsApiClient.post<{ transactions: Array<TransactionWithBlockhash> }>('/fee-share/partner-config/claim-tx', {
 			partnerWallet: partner.toBase58(),
 		});

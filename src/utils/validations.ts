@@ -114,6 +114,15 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		throw new Error('Total fee claimers exceeds BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT; please provide an additional lookup tables.');
 	}
 
+	if (params.partner || params.partnerConfig) {
+		if (!params.partner) {
+			throw new Error('partner is required when partnerConfig is provided');
+		}
+		if (!params.partnerConfig) {
+			throw new Error('partnerConfig is required when partner is provided');
+		}
+	}
+
 	return {
 		basisPointsArray: params.feeClaimers.map((claimer) => claimer.userBps),
 		payer: params.payer.toBase58(),

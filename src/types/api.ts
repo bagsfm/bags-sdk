@@ -120,3 +120,15 @@ export type BagsGetFeeShareWalletV2BulkStateItem = {
 	platformData: BagsGetFeeShareWalletV2State['platformData'] | null;
 	wallet: BagsGetFeeShareWalletV2State['wallet'] | null;
 };
+
+export type TokenClaimEvent = {
+	wallet: string;
+	isCreator: boolean;
+	amount: string;
+	signature: string;
+	timestamp: number;
+};
+
+export type GetTokenClaimEventsSuccessResponse = {
+	events: Array<TokenClaimEvent>;
+};

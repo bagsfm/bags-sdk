@@ -2,7 +2,7 @@
   "address": "FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK",
   "metadata": {
     "name": "bags_fee_share",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "spec": "0.1.0",
     "description": "Bags Fee Share V2 Program"
   },
@@ -239,7 +239,7 @@
             "Singleton program config PDA (holds admin pubkey)"
           ],
           "writable": true,
-          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+          "address": "8SrW8DjZcAPAWYSdSu468LKLQ7WDRaEUsswNvHCiAYs"
         },
         {
           "name": "platform_vault",
@@ -247,7 +247,7 @@
             "Platform vault (receives bags fees)"
           ],
           "writable": true,
-          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+          "address": "ERH2UUYzUULwKy7sLHxeEGcN4B2QjDoQS8Z8GMhuL8cE"
         },
         {
           "name": "partner_config",
@@ -794,7 +794,7 @@
             "Singleton program config PDA (holds admin pubkey)"
           ],
           "writable": true,
-          "address": "6PghXA2srvKwEWmExSeWnN4tuC7Xy38mvnje3Go2iKcV"
+          "address": "8SrW8DjZcAPAWYSdSu468LKLQ7WDRaEUsswNvHCiAYs"
         },
         {
           "name": "platform_vault",
@@ -802,7 +802,7 @@
             "Platform vault (receives bags fees)"
           ],
           "writable": true,
-          "address": "HP5XGAWkmPcWC3QDDh5XTKk4FRjdxrB4qUoU5tQAgsW2"
+          "address": "ERH2UUYzUULwKy7sLHxeEGcN4B2QjDoQS8Z8GMhuL8cE"
         },
         {
           "name": "base_mint",
@@ -3413,7 +3413,7 @@
     {
       "name": "update_partner_config",
       "docs": [
-        "Update partner config"
+        "**@deprecated: use `update_partner_fee_collection` instead (2.1.0)**"
       ],
       "discriminator": [
         111,
@@ -3552,6 +3552,156 @@
           "type": {
             "defined": {
               "name": "UpdatePartnerConfigParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_partner_fee_collection",
+      "docs": [
+        "Updates:",
+        "* partner fee collection mode",
+        "* partner fee collection platform bps",
+        "* partner fee collection claimers bps"
+      ],
+      "discriminator": [
+        155,
+        56,
+        159,
+        217,
+        130,
+        217,
+        252,
+        72
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing update"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Partner config (PDA) to update; must belong to `partner`"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Partner wallet referenced by the config"
+          ],
+          "relations": [
+            "partner_config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program (future-proofing)"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpdatePartnerFeeCollectionParameters"
             }
           }
         }
@@ -3809,6 +3959,19 @@
       ]
     },
     {
+      "name": "PartnerConfigV2SnapshotEvent",
+      "discriminator": [
+        44,
+        79,
+        22,
+        247,
+        183,
+        216,
+        168,
+        183
+      ]
+    },
+    {
       "name": "PlatformAccumulatedEvent",
       "discriminator": [
         135,
@@ -3897,108 +4060,128 @@
     },
     {
       "code": 6004,
+      "name": "InvalidPartnerFeeCollectionMode",
+      "msg": "Invalid partner fee collection mode"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidPartnerFeeCollectionBPS",
+      "msg": "Invalid partner fee collection BPS (must be < 10_000)"
+    },
+    {
+      "code": 6006,
+      "name": "MissingPartnerFeeCollectionPlatformBps",
+      "msg": "Missing partner platform fee collection BPS for selected mode"
+    },
+    {
+      "code": 6007,
       "name": "InvalidPlatformBPS",
       "msg": "Invalid platform BPS provided, must be lt 10_000"
     },
     {
-      "code": 6005,
+      "code": 6008,
       "name": "InvalidPartnerAccounts",
       "msg": "Invalid partner accounts provided"
     },
     {
-      "code": 6006,
+      "code": 6009,
       "name": "Unauthorized",
       "msg": "Unauthorized"
     },
     {
-      "code": 6007,
+      "code": 6010,
       "name": "NothingToClaim",
       "msg": "Nothing to claim"
     },
     {
-      "code": 6008,
+      "code": 6011,
       "name": "InvalidDataLength",
       "msg": "Invalid data length"
     },
     {
-      "code": 6009,
+      "code": 6012,
       "name": "MismatchedLengths",
       "msg": "Mismatched claimers and bps lengths"
     },
     {
-      "code": 6010,
+      "code": 6013,
       "name": "IndexOutOfBounds",
       "msg": "Index out of bounds"
     },
     {
-      "code": 6011,
+      "code": 6014,
       "name": "OnlyWSOLSupported",
       "msg": "Only WSOL is supported as quote mint"
     },
     {
-      "code": 6012,
+      "code": 6015,
       "name": "DuplicateClaimer",
       "msg": "Duplicate claimer provided"
     },
     {
-      "code": 6013,
+      "code": 6016,
       "name": "CannotRemoveClaimerWithFees",
       "msg": "Cannot remove claimer that still has outstanding fees"
     },
     {
-      "code": 6014,
+      "code": 6017,
       "name": "CannotChangeClaimerIndexWithFees",
       "msg": "Cannot change index for claimer that still has outstanding fees"
     },
     {
-      "code": 6015,
+      "code": 6018,
       "name": "Unreachable",
       "msg": "Shouldn't happen, but fell through to here"
     },
     {
-      "code": 6016,
+      "code": 6019,
       "name": "NoPendingAdmin",
       "msg": "No pending admin"
     },
     {
-      "code": 6017,
+      "code": 6020,
       "name": "InvalidAmountOut",
       "msg": "Invalid amount out provided"
     },
     {
-      "code": 6018,
+      "code": 6021,
       "name": "CannotSetSelfAsPendingAdmin",
       "msg": "Cannot set self as pending admin"
     },
     {
-      "code": 6019,
+      "code": 6022,
       "name": "InvalidUpdateIndex",
       "msg": "Invalid update index"
     },
     {
-      "code": 6020,
+      "code": 6023,
       "name": "ConfigNotInitialized",
       "msg": "Config not initialized"
     },
     {
-      "code": 6021,
+      "code": 6024,
       "name": "ConfigUpdateLocked",
       "msg": "Config update is currently locked"
     },
     {
-      "code": 6022,
+      "code": 6025,
       "name": "InvalidNumClaimers",
       "msg": "Invalid number of claimers, must be between 1 and MAX_CLAIMERS"
     },
     {
-      "code": 6023,
+      "code": 6026,
       "name": "ConfigAlreadyFinalized",
       "msg": "Config already finalized"
     },
     {
-      "code": 6024,
+      "code": 6027,
       "name": "InvalidFeeShareAuthority",
       "msg": "Invalid fee share authority provided"
+    },
+    {
+      "code": 6028,
+      "name": "UpdatePartnerConfigDeprecated",
+      "msg": "Deprecated ix, use update_partner_fee_collection instead"
     }
   ],
   "types": [
@@ -4902,14 +5085,32 @@
             "type": "pubkey"
           },
           {
+            "name": "fee_collection_mode",
+            "docs": [
+              "Partner fee collection mode (stored as u8; see [`PartnerFeeCollectionMode`])",
+              "",
+              "Defaults to 0 (CollectFromClaimers)."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "fee_collection_platform_bps",
+            "docs": [
+              "Partner fee collection bps from platform share (used for CollectFromPlatform and CollectFromAll)",
+              "",
+              "Defaults to 0."
+            ],
+            "type": "u16"
+          },
+          {
             "name": "padding_1",
             "docs": [
-              "Reserved for future use (aligned to 1 byte)"
+              "Reserved for future use"
             ],
             "type": {
               "array": [
                 "u8",
-                5
+                2
               ]
             }
           },
@@ -4923,14 +5124,16 @@
           {
             "name": "bps",
             "docs": [
-              "Partner share in basis points (before distribution to claimers)"
+              "Partner share in basis points (before distribution to claimers)",
+              "",
+              "Updated name: **fee_collection_claimers_bps**"
             ],
             "type": "u16"
           },
           {
             "name": "padding_0",
             "docs": [
-              "Padding reserved for future use (aligned to 8 bytes)"
+              "Padding reserved for future use (8-byte aligned; kept for backwards-compatible account size)"
             ],
             "type": {
               "array": [
@@ -5031,6 +5234,75 @@
               "New partner BPS after update"
             ],
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerConfigV2SnapshotEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp (seconds) at emit"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "admin",
+            "docs": [
+              "Admin that updated the partner config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner_config",
+            "docs": [
+              "Partner config account (PDA)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "docs": [
+              "Partner wallet associated with the config"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_collection_mode",
+            "docs": [
+              "Partner fee collection mode"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "fee_collection_platform_bps",
+            "docs": [
+              "Partner fee collection platform bps"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "fee_collection_claimers_bps",
+            "docs": [
+              "Partner fee collection claimers bps"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "padding_0",
+            "docs": [
+              "Padding reserved for future use (8-byte aligned; kept for backwards-compatible account size)"
+            ],
+            "type": {
+              "array": [
+                "u64",
+                5
+              ]
+            }
           }
         ]
       }
@@ -5411,6 +5683,35 @@
         "fields": [
           {
             "name": "bps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdatePartnerFeeCollectionParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee_collection_mode",
+            "docs": [
+              "Partner fee collection mode"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "fee_collection_platform_bps",
+            "docs": [
+              "Partner fee collection bps from the platform pool."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "fee_collection_claimers_bps",
+            "docs": [
+              "Partner fee collection claimers bps"
+            ],
             "type": "u16"
           }
         ]
