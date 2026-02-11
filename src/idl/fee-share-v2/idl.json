@@ -2,7 +2,7 @@
   "address": "FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK",
   "metadata": {
     "name": "bags_fee_share",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "spec": "0.1.0",
     "description": "Bags Fee Share V2 Program"
   },
@@ -2704,7 +2704,7 @@
     {
       "name": "force_claim_user",
       "docs": [
-        "Force claim user fees (admin only)"
+        "Force claim user fees (admin only); delivers WSOL to user's ATA"
       ],
       "discriminator": [
         216,
@@ -3030,6 +3030,328 @@
           "type": {
             "defined": {
               "name": "ForceClaimUserParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "force_sol_claim_user",
+      "docs": [
+        "Force claim user fees as native SOL (admin only); unwraps WSOL and sends SOL to user"
+      ],
+      "discriminator": [
+        78,
+        63,
+        180,
+        4,
+        151,
+        16,
+        107,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing force claim"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "docs": [
+            "Claimer user (no signature required). Receives native SOL when escrow is closed."
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA; seeds by base/quote mints)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee ledger (PDA; source of funds)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority_quote_ata",
+          "docs": [
+            "Authority's WSOL ATA (source)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "fee_share_authority"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "escrow_wsol_account",
+          "docs": [
+            "Ephemeral WSOL escrow. Created and closed atomically within",
+            "this instruction. All lamports (claimed amount + rent) are",
+            "sent to `user` as native SOL when the account is closed."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  111,
+                  114,
+                  99,
+                  101,
+                  95,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109,
+                  95,
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base token mint (seed)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Programs"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "ForceSolClaimUserParameters"
             }
           }
         }
@@ -3409,6 +3731,237 @@
           }
         }
       ]
+    },
+    {
+      "name": "update_fee_config_partner",
+      "docs": [
+        "Update partner on an existing fee config"
+      ],
+      "discriminator": [
+        175,
+        155,
+        78,
+        199,
+        239,
+        2,
+        95,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Admin signer authorizing the update"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "docs": [
+            "Singleton program config PDA (holds admin pubkey)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_config",
+          "docs": [
+            "Fee share config (PDA) whose partner is being updated"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_share_authority",
+          "docs": [
+            "Fee share authority (PDA) - needed for event emission"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  115,
+                  104,
+                  97,
+                  114,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_mint"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "base_mint",
+          "docs": [
+            "Base mint (seed for PDAs)"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "docs": [
+            "Quote mint (WSOL; seed for PDAs)"
+          ],
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "partner_config",
+          "docs": [
+            "Optional new partner config (PDA); must belong to `partner` if provided"
+          ],
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner",
+          "docs": [
+            "Optional new partner wallet; must match partner_config if provided"
+          ],
+          "optional": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "System program"
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
     },
     {
       "name": "update_partner_config",
@@ -4956,6 +5509,21 @@
     },
     {
       "name": "ForceClaimUserParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "claimer_index",
+            "docs": [
+              "Index of claimer in the config claimers array"
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ForceSolClaimUserParameters",
       "type": {
         "kind": "struct",
         "fields": [
