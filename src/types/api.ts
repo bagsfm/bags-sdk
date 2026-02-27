@@ -47,6 +47,9 @@ export interface TokenLaunchCreator {
 	wallet: string;
 	provider: SocialProvider | 'unknown' | null;
 	providerUsername: string | null;
+	twitterUsername?: string;
+	bagsUsername?: string;
+	isAdmin?: boolean;
 }
 
 export interface BagsSocialProviderUserData {
