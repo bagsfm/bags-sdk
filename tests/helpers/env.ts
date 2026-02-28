@@ -20,6 +20,8 @@ const rawTestEnv = cleanEnv(process.env, {
 	BAGS_TEST_TOKEN_LAUNCH_TWITTER: str({ default: '' }),
 	BAGS_TEST_TRADE_TOKEN_MINT_FROM_TOKEN_MINT: str(),
 	BAGS_TEST_TRADE_TOKEN_MINT_TO_TOKEN_MINT: str(),
+	BAGS_TEST_FEE_SHARE_ADMIN_WALLET: str(),
+	BAGS_TEST_TOKEN_MINT_FEE_SHARE_V2: str(),
 });
 
 function toPublicKey(name: string, value: string): PublicKey {
@@ -37,6 +39,9 @@ export const testEnv = {
 	
 	// This should be a valid bags token mint
 	tokenMint: toPublicKey('BAGS_TEST_TOKEN_MINT', rawTestEnv.BAGS_TEST_TOKEN_MINT),
+
+	// This should be a valid bags token mint using fee share v2
+	tokenMintFeeShareV2: toPublicKey('BAGS_TEST_TOKEN_MINT_FEE_SHARE_V2', rawTestEnv.BAGS_TEST_TOKEN_MINT_FEE_SHARE_V2),
 
 	// This will most likely be wSOL
 	quoteMint: toPublicKey('BAGS_TEST_QUOTE_MINT', rawTestEnv.BAGS_TEST_QUOTE_MINT),
@@ -66,6 +71,9 @@ export const testEnv = {
 
 	tradeTokenMintFromTokenMint: toPublicKey('BAGS_TEST_TRADE_TOKEN_MINT_FROM_TOKEN_MINT', rawTestEnv.BAGS_TEST_TRADE_TOKEN_MINT_FROM_TOKEN_MINT),
 	tradeTokenMintToTokenMint: toPublicKey('BAGS_TEST_TRADE_TOKEN_MINT_TO_TOKEN_MINT', rawTestEnv.BAGS_TEST_TRADE_TOKEN_MINT_TO_TOKEN_MINT),
+
+	// This should be a wallet that is the fee share admin for at least one token
+	feeShareAdminWallet: toPublicKey('BAGS_TEST_FEE_SHARE_ADMIN_WALLET', rawTestEnv.BAGS_TEST_FEE_SHARE_ADMIN_WALLET),
 };
 
 export type TestEnv = typeof testEnv;

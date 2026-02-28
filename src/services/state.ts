@@ -4,6 +4,7 @@ import type {
 	BagsGetFeeShareWalletV2BulkStateItem,
 	BagsGetFeeShareWalletV2Response,
 	BagsGetFeeShareWalletV2State,
+	BagsTokenLeaderBoardItem,
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimEventsSuccessResponse,
@@ -127,6 +128,17 @@ export class StateService {
 		});
 
 		return creators;
+	}
+
+	/**
+	 * Get top tokens by lifetime fees
+	 *
+	 * @returns The leaderboard items
+	 */
+	async getTopTokensByLifetimeFees(): Promise<Array<BagsTokenLeaderBoardItem>> {
+		const response = await this.bagsApiClient.get<Array<BagsTokenLeaderBoardItem>>('/token-launch/top-tokens/lifetime-fees');
+
+		return response;
 	}
 
 	/**

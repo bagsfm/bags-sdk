@@ -13,10 +13,11 @@ export class ConfigService extends BaseService {
 	}
 
 	async getConfigCreationLookupTableTransactions(
-		args: Exclude<BagsGetOrCreateFeeShareConfigArgs, 'additionalLookupTables'>,
-		tipConfig?: TransactionTipConfig
+		args: Pick<BagsGetOrCreateFeeShareConfigArgs, 'feeClaimers' | 'payer'>,
+		tipConfig?: TransactionTipConfig,
+		maxClaimersNonLut: number = BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT
 	): Promise<{ creationTransaction: VersionedTransaction; extendTransactions: Array<VersionedTransaction>; lutAddresses: Array<PublicKey> } | null> {
-		if (args.feeClaimers.length <= BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT) {
+		if (args.feeClaimers.length <= maxClaimersNonLut) {
 			console.warn('A lookup table is not needed for this config creation');
 			return null;
 		}

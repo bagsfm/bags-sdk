@@ -19,6 +19,7 @@ export const BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED = 'vault';
 
 export const BAGS_GLOBAL_LUT = new PublicKey('Eq1EVs15EAWww1YtPTtWPzJRLPJoS6VYP9oW9SbNr3yp');
 export const BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT = 15;
+export const BAGS_FEE_SHARE_ADMIN_MAX_CLAIMERS_NON_LUT = 7;
 
 export const BAGS_FEE_SHARE_V1_PROGRAM_ID = BagsMeteoraFeeClaimerIDL.address as BagsMeteoraFeeClaimer['address'];
 export const BAGS_FEE_SHARE_V2_PROGRAM_ID = BagsFeeShareIDL.address as BagsFeeShare['address'];
