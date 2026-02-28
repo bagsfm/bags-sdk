@@ -84,6 +84,7 @@ export type BagsGetOrCreateFeeShareConfigArgs = {
 	partner?: PublicKey;
 	partnerConfig?: PublicKey;
 	additionalLookupTables?: Array<PublicKey>;
+	admin?: PublicKey;
 };
 
 export type TransactionWithBlockhash = {

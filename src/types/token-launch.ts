@@ -127,4 +127,5 @@ export type NormalizedCreateFeeShareConfigParams = {
 	tipWallet?: string;
 	tipLamports?: number;
 	additionalLookupTables?: Array<string>;
+	admin?: string;
 };

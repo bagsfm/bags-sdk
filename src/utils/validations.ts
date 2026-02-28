@@ -133,6 +133,7 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		tipWallet: tipConfig?.tipWallet?.toBase58(),
 		tipLamports: tipConfig?.tipLamports,
 		additionalLookupTables: params.additionalLookupTables?.map((lookupTable) => lookupTable.toBase58()),
+		admin: params.admin?.toBase58() ?? undefined,
 	};
 }
 
