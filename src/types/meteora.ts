@@ -120,6 +120,12 @@ export type MeteoraClaimablePositionWithCustomFeeVaultV2PostMigration = {
 	totalClaimableLamportsUserShare: number;
 };
 
-type MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault = MeteoraDbcClaimablePosition | MeteoraDbcClaimablePositionWithCustomFeeVault;
-type MeteoraDbcClaimablePositionWithCustomFeeVaultV2 = MeteoraClaimablePositionWithCustomFeeVaultV2PreMigration | MeteoraClaimablePositionWithCustomFeeVaultV2PostMigration;
-export type BagsClaimablePosition = MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault | MeteoraDbcClaimablePositionWithCustomFeeVaultV2;
+type MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault =
+	| MeteoraDbcClaimablePosition
+	| MeteoraDbcClaimablePositionWithCustomFeeVault;
+type MeteoraDbcClaimablePositionWithCustomFeeVaultV2 =
+	| MeteoraClaimablePositionWithCustomFeeVaultV2PreMigration
+	| MeteoraClaimablePositionWithCustomFeeVaultV2PostMigration;
+export type BagsClaimablePosition =
+	| MeteoraDbcClaimablePositionWithOrWithoutCustomFeeVault
+	| MeteoraDbcClaimablePositionWithCustomFeeVaultV2;

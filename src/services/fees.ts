@@ -2,7 +2,11 @@ import { Commitment, Connection, PublicKey, Transaction } from '@solana/web3.js'
 import { BaseService } from './base';
 import { BagsClaimablePosition, GetClaimTransactionForTokenRequest } from '../types/meteora';
 import { getFeeVaultPda } from '../utils/fee-claim';
-import { BAGS_FEE_SHARE_V1_PROGRAM_ID, BAGS_FEE_SHARE_V2_PROGRAM_ID, BAGS_METEORA_FEE_CLAIMER_VAULT_RENT_EXCEMPT_AMOUNT } from '../constants';
+import {
+	BAGS_FEE_SHARE_V1_PROGRAM_ID,
+	BAGS_FEE_SHARE_V2_PROGRAM_ID,
+	BAGS_METEORA_FEE_CLAIMER_VAULT_RENT_EXCEMPT_AMOUNT,
+} from '../constants';
 import { ClaimTransactionApiResponse } from '../types';
 import bs58 from 'bs58';
 
@@ -18,11 +22,14 @@ export class FeesService extends BaseService {
 	 * @returns Array of claimable positions with fee information
 	 */
 	async getAllClaimablePositions(wallet: PublicKey): Promise<Array<BagsClaimablePosition>> {
-		const response = await this.bagsApiClient.get<Array<BagsClaimablePosition>>('/token-launch/claimable-positions', {
-			params: {
-				wallet: wallet.toBase58(),
-			},
-		});
+		const response = await this.bagsApiClient.get<Array<BagsClaimablePosition>>(
+			'/token-launch/claimable-positions',
+			{
+				params: {
+					wallet: wallet.toBase58(),
+				},
+			}
+		);
 
 		return response;
 	}
@@ -81,12 +88,17 @@ export class FeesService extends BaseService {
 			params.customFeeVaultClaimerSide = position.customFeeVaultClaimerSide;
 
 			const userFeeVaultPda = getFeeVaultPda(
-				position.customFeeVaultClaimerSide === 'A' ? new PublicKey(position.customFeeVaultClaimerA) : new PublicKey(position.customFeeVaultClaimerB),
+				position.customFeeVaultClaimerSide === 'A'
+					? new PublicKey(position.customFeeVaultClaimerA)
+					: new PublicKey(position.customFeeVaultClaimerB),
 				new PublicKey(position.baseMint),
 				new PublicKey(position.programId)
 			);
 
-			const userFeeVaultPdaBalance = await this.connection.getBalance(userFeeVaultPda as PublicKey, this.commitment);
+			const userFeeVaultPdaBalance = await this.connection.getBalance(
+				userFeeVaultPda as PublicKey,
+				this.commitment
+			);
 			const hasFeesInVault = userFeeVaultPdaBalance >= BAGS_METEORA_FEE_CLAIMER_VAULT_RENT_EXCEMPT_AMOUNT;
 
 			if (hasFeesInVault) {
@@ -116,11 +128,16 @@ export class FeesService extends BaseService {
 				params.tokenBVault = position.dammPositionInfo.tokenBVault;
 			}
 		} else {
-			/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-			throw new Error(`Unsupported program ID: ${(position as any).programId}. Expected '${BAGS_FEE_SHARE_V1_PROGRAM_ID}' or '${BAGS_FEE_SHARE_V2_PROGRAM_ID}'`);
+			throw new Error(
+				/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+				`Unsupported program ID: ${(position as any).programId}. Expected '${BAGS_FEE_SHARE_V1_PROGRAM_ID}' or '${BAGS_FEE_SHARE_V2_PROGRAM_ID}'`
+			);
 		}
 
-		const response = await this.bagsApiClient.post<ClaimTransactionApiResponse>('/token-launch/claim-txs/v2', params as GetClaimTransactionForTokenRequest);
+		const response = await this.bagsApiClient.post<ClaimTransactionApiResponse>(
+			'/token-launch/claim-txs/v2',
+			params as GetClaimTransactionForTokenRequest
+		);
 
 		const deserializedTransactions = response.map((tx) => {
 			const decodedTransaction = bs58.decode(tx.tx);
