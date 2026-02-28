@@ -64,5 +64,17 @@ describe('StateService integration', () => {
 		const { state } = getTestSdk();
 		expect(state.getBagsApiClient()).toBeDefined();
 	});
+
+	test('getTopTokensByLifetimeFees returns at least one item with a valid token public key', async () => {
+		const { state } = getTestSdk();
+		const items = await state.getTopTokensByLifetimeFees();
+
+		expect(Array.isArray(items)).toBe(true);
+		expect(items.length).toBeGreaterThan(0);
+
+		const [first] = items;
+		expect(typeof first.token).toBe('string');
+		expect(() => new PublicKey(first.token)).not.toThrow();
+	});
 });
 
