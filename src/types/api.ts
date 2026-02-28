@@ -72,7 +72,7 @@ export type TransactionTipConfig = {
 	tipLamports: number;
 };
 
-type BagsFeeClaimer = {
+export type BagsFeeClaimer = {
 	user: PublicKey;
 	userBps: number;
 };
@@ -134,4 +134,18 @@ export type TokenClaimEvent = {
 
 export type GetTokenClaimEventsSuccessResponse = {
 	events: Array<TokenClaimEvent>;
+};
+
+export type TransferFeeShareAdminParams = {
+	baseMint: PublicKey;
+	currentAdmin: PublicKey;
+	newAdmin: PublicKey;
+	payer: PublicKey;
+};
+
+export type UpdateFeeShareConfigParams = {
+	feeClaimers: Array<BagsFeeClaimer>;
+	payer: PublicKey;
+	baseMint: PublicKey;
+	additionalLookupTables?: Array<PublicKey>;
 };

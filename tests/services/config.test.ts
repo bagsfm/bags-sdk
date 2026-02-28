@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { Keypair, VersionedTransaction } from '@solana/web3.js';
 import type { PublicKey } from '@solana/web3.js';
 import { getTestSdk } from '../helpers/sdk';
-import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT, WRAPPED_SOL_MINT } from '../../src/constants';
+import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../../src/constants';
 import { testEnv } from '../helpers/env';
 
 function buildFeeClaimer(): { user: PublicKey; userBps: number } {
@@ -19,7 +19,6 @@ describe('ConfigService', () => {
 
 		const result = await config.getConfigCreationLookupTableTransactions({
 			payer,
-			baseMint: testEnv.tokenMint,
 			feeClaimers: Array.from({ length: 2 }, () => buildFeeClaimer()),
 		});
 
@@ -43,7 +42,6 @@ describe('ConfigService', () => {
 		const lutResult = await config.getConfigCreationLookupTableTransactions(
 			{
 				payer,
-				baseMint: testEnv.tokenMint,
 				feeClaimers,
 			},
 			{

@@ -7,6 +7,7 @@ import { FeesService } from './services/fees';
 import { PartnerService } from './services/partner';
 import { TradeService } from './services/trade';
 import { SolanaService } from './services/solana';
+import { FeeShareAdminService } from './services/fee-share-admin';
 
 export class BagsSDK {
 	public bagsApiClient: BagsApiClient;
@@ -17,6 +18,7 @@ export class BagsSDK {
 	public partner: PartnerService;
 	public trade: TradeService;
 	public solana: SolanaService;
+	public feeShareAdmin: FeeShareAdminService;
 
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
 		this.bagsApiClient = new BagsApiClient(apiKey);
@@ -27,5 +29,6 @@ export class BagsSDK {
 		this.partner = new PartnerService(apiKey, connection, commitment);
 		this.trade = new TradeService(apiKey, connection, commitment);
 		this.solana = new SolanaService(apiKey, connection, commitment);
+		this.feeShareAdmin = new FeeShareAdminService(apiKey, connection, commitment);
 	}
 }
