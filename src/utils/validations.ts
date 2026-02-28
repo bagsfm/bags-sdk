@@ -1,8 +1,10 @@
 import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../constants';
 import {
 	BagsGetOrCreateFeeShareConfigArgs,
+	CreateDexscreenerOrderParams,
 	CreateTokenInfoParams,
 	GetTradeQuoteParams,
+	NormalizedCreateDexscreenerOrderParams,
 	NormalizedCreateFeeShareConfigParams,
 	NormalizedCreateTokenInfoParams,
 	NormalizedGetTradeQuoteParams,
@@ -176,4 +178,44 @@ export function validateAndNormalizeGetTradeQuoteParams(params: GetTradeQuotePar
 	}
 
 	return normalized;
+}
+
+export function validateAndNormalizeCreateDexscreenerOrderParams(params: CreateDexscreenerOrderParams): NormalizedCreateDexscreenerOrderParams {
+	if (!params.description || typeof params.description !== 'string' || params.description.length < 1) {
+		throw new Error('Description must be at least 1 character');
+	}
+
+	if (params.description.length > 1000) {
+		throw new Error('Description must be less than 1000 characters');
+	}
+
+	if (!isValidUrl(params.iconImageUrl)) {
+		throw new Error('iconImageUrl must be a valid URL');
+	}
+
+	if (!isValidUrl(params.headerImageUrl)) {
+		throw new Error('headerImageUrl must be a valid URL');
+	}
+
+	if (params.links) {
+		for (const link of params.links) {
+			if (!isValidUrl(link.url)) {
+				throw new Error('Each link url must be a valid URL');
+			}
+
+			if (link.label !== undefined && link.label.length > 100) {
+				throw new Error('Link label must be less than 100 characters');
+			}
+		}
+	}
+
+	return {
+		tokenAddress: params.tokenAddress.toBase58(),
+		description: params.description,
+		iconImageUrl: params.iconImageUrl,
+		headerImageUrl: params.headerImageUrl,
+		payerWallet: params.payerWallet.toBase58(),
+		links: params.links,
+		payWithSol: params.payWithSol,
+	};
 }
