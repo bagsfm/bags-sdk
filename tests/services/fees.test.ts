@@ -23,7 +23,10 @@ describe('FeesService integration', () => {
 			throw new Error('No claimable positions found');
 		}
 
-		const maxClaimablePosition = claimablePositions.reduce((max, current) => current.totalClaimableLamportsUserShare > max.totalClaimableLamportsUserShare ? current : max, claimablePositions[0]);
+		const maxClaimablePosition = claimablePositions.reduce(
+			(max, current) => (current.totalClaimableLamportsUserShare > max.totalClaimableLamportsUserShare ? current : max),
+			claimablePositions[0]
+		);
 
 		// if max claimable position is less than 0.0001 SOL, throw an error
 		if (maxClaimablePosition.totalClaimableLamportsUserShare < 0.0001 * LAMPORTS_PER_SOL) {
@@ -40,4 +43,3 @@ describe('FeesService integration', () => {
 		});
 	});
 });
-
