@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { LAMPORTS_PER_SOL, PublicKey, Transaction } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { getTestSdk } from '../helpers/sdk';
 import type { BagsClaimablePosition } from '../../src/types/meteora';
 import { testEnv } from '../helpers/env';
@@ -36,7 +36,7 @@ describe('FeesService integration', () => {
 		expect(transactions.length).toBeGreaterThan(0);
 
 		transactions.forEach((tx) => {
-			expect(tx).toBeInstanceOf(Transaction);
+			expect(tx).toBeInstanceOf(VersionedTransaction);
 		});
 	});
 });
