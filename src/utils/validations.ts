@@ -5,10 +5,15 @@ import {
 	CreateTokenInfoParams,
 	GetTradeQuoteParams,
 	BAGS_CONFIG_TYPE,
+	INCORPORATION_CATEGORIES,
+	IncorporateParams,
 	NormalizedCreateDexscreenerOrderParams,
 	NormalizedCreateFeeShareConfigParams,
 	NormalizedCreateTokenInfoParams,
 	NormalizedGetTradeQuoteParams,
+	NormalizedIncorporateParams,
+	NormalizedStartPaymentParams,
+	StartPaymentParams,
 	TransactionTipConfig,
 } from '../types';
 
@@ -223,5 +228,131 @@ export function validateAndNormalizeCreateDexscreenerOrderParams(params: CreateD
 		payerWallet: params.payerWallet.toBase58(),
 		links: params.links,
 		payWithSol: params.payWithSol,
+	};
+}
+
+export function validateAndNormalizeStartPaymentParams(params: StartPaymentParams): NormalizedStartPaymentParams {
+	if (!params.payerWallet) {
+		throw new Error('payerWallet is required');
+	}
+
+	return {
+		payerWallet: params.payerWallet.toBase58(),
+		payWithSol: params.payWithSol,
+	};
+}
+
+export function validateAndNormalizeIncorporateParams(params: IncorporateParams): NormalizedIncorporateParams {
+	if (!params.orderUUID || typeof params.orderUUID !== 'string' || params.orderUUID.trim().length < 1) {
+		throw new Error('Order UUID is required');
+	}
+
+	if (!params.paymentSignature || typeof params.paymentSignature !== 'string' || params.paymentSignature.trim().length < 1) {
+		throw new Error('Payment signature is required');
+	}
+
+	if (!params.projectName || typeof params.projectName !== 'string' || params.projectName.trim().length < 1) {
+		throw new Error('Project name is required');
+	}
+	if (params.projectName.length > 200) {
+		throw new Error('Project name must be at most 200 characters');
+	}
+
+	if (!params.tokenAddress) {
+		throw new Error('Token address is required');
+	}
+
+	if (!Array.isArray(params.founders) || params.founders.length < 1) {
+		throw new Error('At least one founder is required');
+	}
+	if (params.founders.length > 10) {
+		throw new Error('At most 10 founders are allowed');
+	}
+
+	for (const founder of params.founders) {
+		if (!founder.firstName || typeof founder.firstName !== 'string' || founder.firstName.trim().length < 1) {
+			throw new Error('Founder first name is required');
+		}
+		if (founder.firstName.length > 100) {
+			throw new Error('Founder first name must be at most 100 characters');
+		}
+		if (!founder.lastName || typeof founder.lastName !== 'string' || founder.lastName.trim().length < 1) {
+			throw new Error('Founder last name is required');
+		}
+		if (founder.lastName.length > 100) {
+			throw new Error('Founder last name must be at most 100 characters');
+		}
+		if (!founder.email || typeof founder.email !== 'string') {
+			throw new Error('Founder email is required');
+		}
+		if (!founder.nationalityCountry || founder.nationalityCountry.trim().length !== 3) {
+			throw new Error('Founder nationality country must be an ISO 3166-1 alpha-3 code');
+		}
+		if (!founder.taxResidencyCountry || founder.taxResidencyCountry.trim().length !== 3) {
+			throw new Error('Founder tax residency country must be an ISO 3166-1 alpha-3 code');
+		}
+		if (!founder.residentialAddress || typeof founder.residentialAddress !== 'string' || founder.residentialAddress.trim().length < 1) {
+			throw new Error('Founder residential address is required');
+		}
+		if (founder.residentialAddress.length > 500) {
+			throw new Error('Founder residential address must be at most 500 characters');
+		}
+		if (!Number.isInteger(founder.shareBasisPoint) || founder.shareBasisPoint < 0 || founder.shareBasisPoint > 10000) {
+			throw new Error('Founder share basis points must be an integer between 0 and 10000');
+		}
+	}
+
+	if (!Number.isInteger(params.incorporationShareBasisPoint) || params.incorporationShareBasisPoint < 2000 || params.incorporationShareBasisPoint > 3000) {
+		throw new Error('Incorporation share must be between 2000 (20%) and 3000 (30%)');
+	}
+
+	const founderBps = params.founders.reduce((sum, f) => sum + f.shareBasisPoint, 0);
+	if (founderBps + params.incorporationShareBasisPoint !== 10000) {
+		throw new Error('Total of founder shares and incorporation shares must equal 10000 basis points (100%)');
+	}
+
+	if (!Array.isArray(params.preferredCompanyNames) || params.preferredCompanyNames.length !== 3) {
+		throw new Error('Exactly 3 preferred company names are required');
+	}
+	for (const name of params.preferredCompanyNames) {
+		if (!name || typeof name !== 'string' || name.trim().length < 1) {
+			throw new Error('Company name must not be empty');
+		}
+		if (name.length > 200) {
+			throw new Error('Company name must be at most 200 characters');
+		}
+	}
+
+	if (params.category !== undefined && !(INCORPORATION_CATEGORIES as readonly string[]).includes(params.category)) {
+		throw new Error(`Category must be one of: ${INCORPORATION_CATEGORIES.join(', ')}`);
+	}
+
+	if (params.twitterHandle !== undefined) {
+		if (params.twitterHandle.length > 50) {
+			throw new Error('Twitter handle must be at most 50 characters');
+		}
+		if (!/^[a-zA-Z0-9_]*$/.test(params.twitterHandle)) {
+			throw new Error('Twitter handle must be alphanumeric and underscores only');
+		}
+	}
+
+	return {
+		orderUUID: params.orderUUID,
+		paymentSignature: params.paymentSignature,
+		projectName: params.projectName.trim(),
+		tokenAddress: params.tokenAddress.toBase58(),
+		founders: params.founders.map((f) => ({
+			firstName: f.firstName.trim(),
+			lastName: f.lastName.trim(),
+			email: f.email.trim().toLowerCase(),
+			nationalityCountry: f.nationalityCountry.trim(),
+			taxResidencyCountry: f.taxResidencyCountry.trim(),
+			residentialAddress: f.residentialAddress.trim(),
+			shareBasisPoint: f.shareBasisPoint,
+		})),
+		category: params.category,
+		twitterHandle: params.twitterHandle?.trim(),
+		incorporationShareBasisPoint: params.incorporationShareBasisPoint,
+		preferredCompanyNames: params.preferredCompanyNames.map((n) => n.trim()),
 	};
 }
