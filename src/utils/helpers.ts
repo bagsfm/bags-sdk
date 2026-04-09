@@ -81,8 +81,6 @@ export async function signAndSendTransaction(
 		throw new Error(`Transaction failed: ${confirmed.value.err}`);
 	}
 
-	console.log('✅ Transaction confirmed:', signature);
-
 	return signature;
 }
 
