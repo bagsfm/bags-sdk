@@ -12,6 +12,7 @@ describe('BagsSDK', () => {
 		expect(sdk.fee).toBeDefined();
 		expect(sdk.partner).toBeDefined();
 		expect(sdk.feeShareAdmin).toBeDefined();
+		expect(sdk.auth).toBeDefined();
 	});
 
 	test('state service shares connection and commitment', () => {

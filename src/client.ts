@@ -10,6 +10,7 @@ import { SolanaService } from './services/solana';
 import { FeeShareAdminService } from './services/fee-share-admin';
 import { DexscreenerService } from './services/dexscreener';
 import { IncorporationService } from './services/incorporation';
+import { AuthService } from './services/auth';
 
 export class BagsSDK {
 	public bagsApiClient: BagsApiClient;
@@ -23,6 +24,7 @@ export class BagsSDK {
 	public feeShareAdmin: FeeShareAdminService;
 	public dexscreener: DexscreenerService;
 	public incorporation: IncorporationService;
+	public auth: AuthService;
 
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
 		this.bagsApiClient = new BagsApiClient(apiKey);
@@ -36,5 +38,6 @@ export class BagsSDK {
 		this.feeShareAdmin = new FeeShareAdminService(apiKey, connection, commitment);
 		this.dexscreener = new DexscreenerService(apiKey, connection, commitment);
 		this.incorporation = new IncorporationService(apiKey, connection, commitment);
+		this.auth = new AuthService(apiKey, connection, commitment);
 	}
 }
