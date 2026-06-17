@@ -146,7 +146,7 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		tipLamports: tipConfig?.tipLamports,
 		additionalLookupTables: params.additionalLookupTables?.map((lookupTable) => lookupTable.toBase58()),
 		admin: params.admin?.toBase58() ?? undefined,
-		bagsConfigType: params.bagsConfigType ?? BAGS_CONFIG_TYPE.DEFAULT,
+		bagsConfigType: params.bagsConfigType ?? BAGS_CONFIG_TYPE.DEFAULT_96_LOCKED,
 	};
 }
 
