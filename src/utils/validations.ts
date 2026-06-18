@@ -135,6 +135,10 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		throw new Error('bagsConfigType must be a valid BAGS_CONFIG_TYPE');
 	}
 
+	if (params.enableFirstSwapWithMinFee !== undefined && typeof params.enableFirstSwapWithMinFee !== 'boolean') {
+		throw new Error('enableFirstSwapWithMinFee must be a boolean');
+	}
+
 	return {
 		basisPointsArray: params.feeClaimers.map((claimer) => claimer.userBps),
 		payer: params.payer.toBase58(),
@@ -147,6 +151,7 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		additionalLookupTables: params.additionalLookupTables?.map((lookupTable) => lookupTable.toBase58()),
 		admin: params.admin?.toBase58() ?? undefined,
 		bagsConfigType: params.bagsConfigType ?? BAGS_CONFIG_TYPE.DEFAULT_96_LOCKED,
+		enableFirstSwapWithMinFee: params.enableFirstSwapWithMinFee,
 	};
 }
 

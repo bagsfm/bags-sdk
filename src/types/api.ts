@@ -96,6 +96,7 @@ export type BagsGetOrCreateFeeShareConfigArgs = {
 	additionalLookupTables?: Array<PublicKey>;
 	admin?: PublicKey;
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
+	enableFirstSwapWithMinFee?: boolean;
 };
 
 export type TransactionWithBlockhash = {

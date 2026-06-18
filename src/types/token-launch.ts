@@ -129,4 +129,5 @@ export type NormalizedCreateFeeShareConfigParams = {
 	additionalLookupTables?: Array<string>;
 	admin?: string;
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
+	enableFirstSwapWithMinFee?: boolean;
 };
