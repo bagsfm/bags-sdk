@@ -76,5 +76,16 @@ describe('StateService integration', () => {
 		expect(typeof first.token).toBe('string');
 		expect(() => new PublicKey(first.token)).not.toThrow();
 	});
-});
 
+	test('getTokenClaimStats resolves creator claim stats without throwing', async () => {
+		const { state } = getTestSdk();
+		const stats = await state.getTokenClaimStats(testEnv.tokenMint);
+
+		expect(Array.isArray(stats)).toBe(true);
+
+		for (const item of stats) {
+			expect(typeof item.wallet).toBe('string');
+			expect(typeof item.totalClaimed).toBe('string');
+		}
+	});
+});

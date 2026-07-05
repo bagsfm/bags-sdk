@@ -8,7 +8,6 @@ import type {
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimEventsSuccessResponse,
-	GetTokenClaimStatsV2Response,
 	SupportedSocialProvider,
 	TokenClaimEvent,
 	TokenLaunchCreator,
@@ -193,17 +192,14 @@ export class StateService {
 	 * @returns The creators with claim stats
 	 */
 	async getTokenClaimStats(tokenMint: PublicKey): Promise<Array<TokenLaunchCreatorV3WithClaimStats>> {
-		const response = await this.bagsApiClient.get<GetTokenClaimStatsV2Response>('/token-launch/claim-stats', {
+		// get() already unwraps the { success, response } envelope, so the generic is the inner payload.
+		const response = await this.bagsApiClient.get<Array<TokenLaunchCreatorV3WithClaimStats>>('/token-launch/claim-stats', {
 			params: {
 				tokenMint: tokenMint.toBase58(),
 			},
 		});
 
-		if (!response.success) {
-			throw new Error('Failed to get token claim stats');
-		}
-
-		return response.response;
+		return response;
 	}
 
 	/**
