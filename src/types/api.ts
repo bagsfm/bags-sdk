@@ -109,14 +109,13 @@ export type PartnerConfigClaimStatsResponse = {
 	unclaimedFees: string;
 };
 
-export type TokenLaunchCreatorV3WithClaimStats = TokenLaunchCreator & {
+export type TokenLaunchCreatorV3WithClaimStats = {
 	totalClaimed: string;
+	tokenMint: string;
+	wallet: string;
 };
 
-export type GetTokenClaimStatsV2Response = {
-	success: true;
-	response: Array<TokenLaunchCreatorV3WithClaimStats>;
-};
+export type GetTokenClaimStatsV2Response = Array<TokenLaunchCreatorV3WithClaimStats>;
 
 export type GetLaunchWalletV2BulkRequestItem = {
 	username: string;

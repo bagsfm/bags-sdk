@@ -76,5 +76,27 @@ describe('StateService integration', () => {
 		expect(typeof first.token).toBe('string');
 		expect(() => new PublicKey(first.token)).not.toThrow();
 	});
+
+	test('getTokenClaimStats returns claim stats keyed to the requested token mint', async () => {
+		const { state } = getTestSdk();
+		const stats = await state.getTokenClaimStats(testEnv.tokenMint);
+
+		expect(Array.isArray(stats)).toBe(true);
+		expect(stats.length).toBeGreaterThan(0);
+
+		const expectedMint = testEnv.tokenMint.toBase58();
+
+		for (const entry of stats) {
+			expect(typeof entry.wallet).toBe('string');
+			expect(() => new PublicKey(entry.wallet)).not.toThrow();
+
+			expect(typeof entry.tokenMint).toBe('string');
+			expect(entry.tokenMint).toBe(expectedMint);
+
+			expect(typeof entry.totalClaimed).toBe('string');
+			expect(Number.isFinite(Number(entry.totalClaimed))).toBe(true);
+			expect(Number(entry.totalClaimed)).toBeGreaterThanOrEqual(0);
+		}
+	});
 });
 

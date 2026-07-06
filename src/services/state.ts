@@ -199,11 +199,8 @@ export class StateService {
 			},
 		});
 
-		if (!response.success) {
-			throw new Error('Failed to get token claim stats');
-		}
-
-		return response.response;
+		console.log(response);
+		return response;
 	}
 
 	/**
