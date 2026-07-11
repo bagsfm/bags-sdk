@@ -2,9 +2,13 @@ import { type Commitment, type Connection, PublicKey } from '@solana/web3.js';
 import type {
 	BagsGetFeeShareWalletV2BulkResponseItem,
 	BagsGetFeeShareWalletV2BulkStateItem,
+	BagsGetFeeShareWalletV2EvmState,
 	BagsGetFeeShareWalletV2Response,
+	BagsGetFeeShareWalletV2SolState,
 	BagsGetFeeShareWalletV2State,
 	BagsTokenLeaderBoardItem,
+	EvmTokenCreator,
+	FeeShareWalletChain,
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimEventsSuccessResponse,
@@ -131,6 +135,27 @@ export class StateService {
 	}
 
 	/**
+	 * Get EVM token creators
+	 *
+	 * Resolves the creator and fee-share claimers of a Bags EVM token, enriched with
+	 * Bags social profile data. The creator is always included; if the creator is not
+	 * also a claimer, they are appended with `royaltyBps: 0` and `isCreator: true`.
+	 * The response is always an array, even for a single creator/claimer.
+	 *
+	 * @param tokenAddress The Bags EVM token address (0x-prefixed, 20-byte hex). Normalized to EIP-55 checksum form by the backend.
+	 * @returns The EVM token creators/claimers
+	 */
+	async getEvmTokenCreators(tokenAddress: string): Promise<Array<EvmTokenCreator>> {
+		const creators = await this.bagsApiClient.get<Array<EvmTokenCreator>>('/evm/token-creator', {
+			params: {
+				tokenAddress,
+			},
+		});
+
+		return creators;
+	}
+
+	/**
 	 * Get top tokens by lifetime fees
 	 *
 	 * @returns The leaderboard items
@@ -242,22 +267,37 @@ export class StateService {
 	 *
 	 * @param username The username to get the launch wallet for
 	 * @param provider The social provider, e.g. `twitter`, `tiktok`
+	 * @param chain The blockchain to resolve the wallet on. Defaults to `SOL`. `SOL` returns a `PublicKey`, `EVM` returns a `0x…` string address.
 	 * @returns The launch wallet
 	 * @throws Error if the request fails or the response indicates failure
 	 */
-	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider): Promise<BagsGetFeeShareWalletV2State> {
+	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider): Promise<BagsGetFeeShareWalletV2SolState>;
+	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider, chain: 'SOL'): Promise<BagsGetFeeShareWalletV2SolState>;
+	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider, chain: 'EVM'): Promise<BagsGetFeeShareWalletV2EvmState>;
+	async getLaunchWalletV2(username: string, provider: SupportedSocialProvider, chain: FeeShareWalletChain = 'SOL'): Promise<BagsGetFeeShareWalletV2State> {
 		try {
 			const response = await this.bagsApiClient.get<BagsGetFeeShareWalletV2Response>('/token-launch/fee-share/wallet/v2', {
 				params: {
 					username,
 					provider,
+					chain,
 				},
 			});
+
+			if (response.chain === 'EVM') {
+				return {
+					platformData: response.platformData,
+					provider: response.provider,
+					wallet: response.wallet,
+					chain: 'EVM',
+				};
+			}
 
 			return {
 				platformData: response.platformData,
 				provider: response.provider,
 				wallet: new PublicKey(response.wallet),
+				chain: 'SOL',
 			};
 		} catch (error: unknown) {
 			throw new Error(`Failed to get launch wallet for ${provider} user ${username}: ${(error as Error)?.message}`);
@@ -277,12 +317,25 @@ export class StateService {
 				items,
 			});
 
-			return response.map((item) => ({
-				username: item.username,
-				provider: item.provider,
-				platformData: item.platformData,
-				wallet: item.wallet ? new PublicKey(item.wallet) : null,
-			}));
+			return response.map((item): BagsGetFeeShareWalletV2BulkStateItem => {
+				if (item.chain === 'EVM') {
+					return {
+						username: item.username,
+						provider: item.provider,
+						platformData: item.platformData,
+						wallet: item.wallet,
+						chain: 'EVM',
+					};
+				}
+
+				return {
+					username: item.username,
+					provider: item.provider,
+					platformData: item.platformData,
+					wallet: item.wallet ? new PublicKey(item.wallet) : null,
+					chain: 'SOL',
+				};
+			});
 		} catch (error: unknown) {
 			throw new Error(`Failed to get launch wallets in bulk: ${(error as Error)?.message}`);
 		}
