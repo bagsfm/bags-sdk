@@ -33,11 +33,14 @@ export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
 	poolConfigKeys: Array<string>;
 };
 
-export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github'] as const;
+export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github', 'moltbook'] as const;
 export const SUPPORTED_LAUNCH_SOCIAL_PROVIDERS = ['twitter', 'tiktok', 'kick', 'github'] as const;
 
 export type SocialProvider = (typeof VALID_SOCIAL_PROVIDERS)[number];
 export type SupportedSocialProvider = (typeof SUPPORTED_LAUNCH_SOCIAL_PROVIDERS)[number];
+
+export const FEE_SHARE_WALLET_CHAINS = ['SOL', 'EVM'] as const;
+export type FeeShareWalletChain = (typeof FEE_SHARE_WALLET_CHAINS)[number];
 
 export interface TokenLaunchCreator {
 	username: string;
@@ -52,6 +55,18 @@ export interface TokenLaunchCreator {
 	isAdmin?: boolean;
 }
 
+export interface EvmTokenCreator {
+	username: string;
+	pfp: string;
+	royaltyBps: number;
+	isCreator: boolean;
+	wallet: string;
+	provider?: SocialProvider | 'unknown' | null;
+	providerUsername?: string | null;
+	twitterUsername?: string;
+	bagsUsername?: string;
+}
+
 export interface BagsSocialProviderUserData {
 	id: string;
 	username: string;
@@ -59,13 +74,28 @@ export interface BagsSocialProviderUserData {
 	avatar_url: string;
 }
 
-export type BagsGetFeeShareWalletV2Response<WalletType = string> = {
+export type BagsGetFeeShareWalletV2Response = {
 	provider: SocialProvider;
 	platformData: BagsSocialProviderUserData;
-	wallet: WalletType;
+	wallet: string;
+	chain: FeeShareWalletChain;
 };
 
-export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2Response<PublicKey>;
+export type BagsGetFeeShareWalletV2SolState = {
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData;
+	wallet: PublicKey;
+	chain: 'SOL';
+};
+
+export type BagsGetFeeShareWalletV2EvmState = {
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData;
+	wallet: string;
+	chain: 'EVM';
+};
+
+export type BagsGetFeeShareWalletV2State = BagsGetFeeShareWalletV2SolState | BagsGetFeeShareWalletV2EvmState;
 
 export type TransactionTipConfig = {
 	tipWallet: PublicKey;
@@ -120,6 +150,7 @@ export type GetTokenClaimStatsV2Response = Array<TokenLaunchCreatorV3WithClaimSt
 export type GetLaunchWalletV2BulkRequestItem = {
 	username: string;
 	provider: SupportedSocialProvider;
+	chain?: FeeShareWalletChain;
 };
 
 export type BagsGetFeeShareWalletV2BulkResponseItem = {
@@ -127,14 +158,26 @@ export type BagsGetFeeShareWalletV2BulkResponseItem = {
 	provider: BagsGetFeeShareWalletV2Response['provider'];
 	platformData: BagsGetFeeShareWalletV2Response['platformData'] | null;
 	wallet: string | null;
+	chain: FeeShareWalletChain;
 };
 
-export type BagsGetFeeShareWalletV2BulkStateItem = {
+export type BagsGetFeeShareWalletV2BulkSolStateItem = {
 	username: string;
-	provider: BagsGetFeeShareWalletV2State['provider'];
-	platformData: BagsGetFeeShareWalletV2State['platformData'] | null;
-	wallet: BagsGetFeeShareWalletV2State['wallet'] | null;
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData | null;
+	wallet: PublicKey | null;
+	chain: 'SOL';
 };
+
+export type BagsGetFeeShareWalletV2BulkEvmStateItem = {
+	username: string;
+	provider: SocialProvider;
+	platformData: BagsSocialProviderUserData | null;
+	wallet: string | null;
+	chain: 'EVM';
+};
+
+export type BagsGetFeeShareWalletV2BulkStateItem = BagsGetFeeShareWalletV2BulkSolStateItem | BagsGetFeeShareWalletV2BulkEvmStateItem;
 
 export type TokenClaimEvent = {
 	wallet: string;
