@@ -77,7 +77,6 @@ new BagsSDK(apiKey: string, connection: Connection, commitment?: Commitment)
 | **Solana** | `sdk.solana` | Submit Jito bundles, check bundle statuses, and query Jito tip fees |
 | **Fee Share Admin** | `sdk.feeShareAdmin` | Transfer admin roles, list admin mints, and update fee-share configs |
 | **Dexscreener** | `sdk.dexscreener` | Check order availability, create orders, and submit payments for Dexscreener listings |
-| **Incorporation** | `sdk.incorporation` | Start payments, register incorporation details, and manage incorporation projects |
 | **Auth** | `sdk.auth` | Fetch the API key owner's user profile |
 
 ### Exported Utilities
