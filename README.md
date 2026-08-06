@@ -78,6 +78,7 @@ new BagsSDK(apiKey: string, connection: Connection, commitment?: Commitment)
 | **Fee Share Admin** | `sdk.feeShareAdmin` | Transfer admin roles, list admin mints, and update fee-share configs |
 | **Dexscreener** | `sdk.dexscreener` | Check order availability, create orders, and submit payments for Dexscreener listings |
 | **Auth** | `sdk.auth` | Fetch the API key owner's user profile |
+| **Robinhood** | `sdk.robinhood` | List Robinhood Chain claimable positions and build unsigned claim transactions |
 
 ### Exported Utilities
 

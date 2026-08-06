@@ -16,13 +16,14 @@ const rawTestEnv = cleanEnv(process.env, {
 	BAGS_TEST_TOKEN_LAUNCH_SYMBOL: str(),
 	BAGS_TEST_TOKEN_LAUNCH_DESCRIPTION: str(),
 	BAGS_TEST_TOKEN_LAUNCH_WEBSITE: str(),
-	BAGS_TEST_TOKEN_LAUNCH_TELEGRAM: str({default: ''}),
+	BAGS_TEST_TOKEN_LAUNCH_TELEGRAM: str({ default: '' }),
 	BAGS_TEST_TOKEN_LAUNCH_TWITTER: str({ default: '' }),
 	BAGS_TEST_TRADE_TOKEN_MINT_FROM_TOKEN_MINT: str(),
 	BAGS_TEST_TRADE_TOKEN_MINT_TO_TOKEN_MINT: str(),
 	BAGS_TEST_FEE_SHARE_ADMIN_WALLET: str(),
 	BAGS_TEST_TOKEN_MINT_FEE_SHARE_V2: str(),
 	BAGS_TEST_NOT_USED_BAGS_TOKEN_MINT: str(),
+	BAGS_TEST_RH_OWNER: str({ default: '' }),
 });
 
 function toPublicKey(name: string, value: string): PublicKey {
@@ -37,7 +38,7 @@ function toPublicKey(name: string, value: string): PublicKey {
 export const testEnv = {
 	solanaRpcUrl: rawTestEnv.SOLANA_RPC_URL,
 	bagsApiKey: rawTestEnv.BAGS_API_KEY,
-	
+
 	// This should be a valid bags token mint
 	tokenMint: toPublicKey('BAGS_TEST_TOKEN_MINT', rawTestEnv.BAGS_TEST_TOKEN_MINT),
 
@@ -46,13 +47,13 @@ export const testEnv = {
 
 	// This will most likely be wSOL
 	quoteMint: toPublicKey('BAGS_TEST_QUOTE_MINT', rawTestEnv.BAGS_TEST_QUOTE_MINT),
-	
+
 	// This should be a valid twitter username
 	socialUsername: rawTestEnv.BAGS_TEST_SOCIAL_USERNAME,
-	
+
 	// This should be a wallet that has at least one claimable position
 	feeWallet: toPublicKey('BAGS_TEST_FEE_WALLET', rawTestEnv.BAGS_TEST_FEE_WALLET),
-	
+
 	// This should be a public key that is funded and able to pay for token launches
 	launchWallet: toPublicKey('BAGS_TEST_LAUNCH_WALLET', rawTestEnv.BAGS_TEST_LAUNCH_WALLET),
 
@@ -77,6 +78,9 @@ export const testEnv = {
 	feeShareAdminWallet: toPublicKey('BAGS_TEST_FEE_SHARE_ADMIN_WALLET', rawTestEnv.BAGS_TEST_FEE_SHARE_ADMIN_WALLET),
 
 	notUsedBagsTokenMint: toPublicKey('BAGS_TEST_NOT_USED_BAGS_TOKEN_MINT', rawTestEnv.BAGS_TEST_NOT_USED_BAGS_TOKEN_MINT),
+
+	// Optional wallet with at least one actionable Robinhood Chain fee position
+	robinhoodOwner: rawTestEnv.BAGS_TEST_RH_OWNER,
 };
 
 export type TestEnv = typeof testEnv;
