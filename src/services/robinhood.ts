@@ -1,6 +1,11 @@
 import { Commitment, Connection } from '@solana/web3.js';
 import { BaseService } from './base';
-import { CreateRobinhoodClaimTransactionsParams, RobinhoodClaimablePositions, RobinhoodClaimTransactions } from '../types/robinhood';
+import {
+	CreateRobinhoodClaimTransactionsParams,
+	RobinhoodClaimablePositions,
+	RobinhoodClaimTransactions,
+	RobinhoodTopVolumeResponse,
+} from '../types/robinhood';
 
 export class RobinhoodService extends BaseService {
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
@@ -16,6 +21,15 @@ export class RobinhoodService extends BaseService {
 		return this.bagsApiClient.get<RobinhoodClaimablePositions>('/evm/rh/claimable-positions', {
 			params: { owner },
 		});
+	}
+
+	/**
+	 * Get the top 100 Robinhood Chain tokens by lifetime volume.
+	 *
+	 * @returns Tokens ranked by inferred lifetime ETH volume, highest first
+	 */
+	async getTopVolume(): Promise<RobinhoodTopVolumeResponse> {
+		return this.bagsApiClient.get<RobinhoodTopVolumeResponse>('/evm/rh/top-volume');
 	}
 
 	/**
