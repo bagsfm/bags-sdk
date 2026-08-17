@@ -26,6 +26,16 @@ export interface RobinhoodToken {
 	version?: RobinhoodProtocolVersion;
 }
 
+export interface RobinhoodTopVolumeItem extends RobinhoodToken {
+	priceEthPerToken: string | null;
+	bondingProgressPct: number;
+	volumeEthWei: string;
+}
+
+export interface RobinhoodTopVolumeResponse {
+	items: Array<RobinhoodTopVolumeItem>;
+}
+
 export interface RobinhoodClaimablePosition {
 	token: RobinhoodToken;
 	feeShare: string;
