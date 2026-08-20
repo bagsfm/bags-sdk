@@ -191,6 +191,39 @@ export type GetTokenClaimEventsSuccessResponse = {
 	events: Array<TokenClaimEvent>;
 };
 
+export type ForceClaimType = 'Unknown' | 'Admin' | 'Manager';
+
+export type GlobalClaimEventV2 = {
+	tokenMint: string;
+	user: TokenLaunchCreator | null;
+	wallet: string;
+	isCreator: boolean;
+	amount: string;
+	mint: string;
+	decimals: number;
+	amountUsd: number | null;
+	signature: string;
+	timestamp: number;
+	isFirstClaim: boolean;
+	preMigrationPool: string | null;
+	postMigrationPool: string | null;
+	isForceClaim: boolean;
+	forceClaimType: ForceClaimType | null;
+};
+
+export type GetGlobalClaimFeedV2Response = {
+	events: Array<GlobalClaimEventV2>;
+	hasMore: boolean;
+};
+
+export type GetGlobalClaimFeedV2Options = {
+	limit?: number;
+	before?: number;
+	minAmount?: number;
+	maxAmount?: number;
+	onlyFirstClaims?: boolean;
+};
+
 export interface JupiterTokenFirstPool {
 	id: string;
 	createdAt: string;
