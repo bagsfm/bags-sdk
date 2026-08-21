@@ -1,7 +1,12 @@
-import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
+import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+	GetTokenLaunchBulkResponse,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -83,6 +88,23 @@ export class TokenLaunchService extends BaseService {
 			headers: {
 				...formData.getHeaders(),
 			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get token launches in bulk
+	 *
+	 * Fetches token launch records for up to 100 token mints in one request. Results
+	 * preserve input order, with `null` for a mint that has no launch record.
+	 *
+	 * @param tokenMints The token mints to look up (1-100 unique keys)
+	 * @returns The token launch records, in the same order as `tokenMints`
+	 */
+	async getTokenLaunchesBulk(tokenMints: PublicKey[]): Promise<GetTokenLaunchBulkResponse> {
+		const response = await this.bagsApiClient.post<GetTokenLaunchBulkResponse>('/token-launch/bulk', {
+			tokenMints: tokenMints.map((tokenMint) => tokenMint.toBase58()),
 		});
 
 		return response;

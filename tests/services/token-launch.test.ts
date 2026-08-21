@@ -40,5 +40,18 @@ describe('TokenLaunchService integration', () => {
 
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
+
+	test('getTokenLaunchesBulk preserves order and returns null for unknown mints', async () => {
+		const sdk = getTestSdk();
+		const unknownMint = PublicKey.unique();
+		const tokenLaunches = await sdk.tokenLaunch.getTokenLaunchesBulk([
+			new PublicKey(tokenInfoResponse.tokenMint),
+			unknownMint,
+		]);
+
+		expect(tokenLaunches).toHaveLength(2);
+		expect(tokenLaunches[0]?.tokenMint).toBe(tokenInfoResponse.tokenMint);
+		expect(tokenLaunches[1]).toBeNull();
+	});
 });
 
