@@ -1,7 +1,13 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+	GetDammV2LaunchesParams,
+	GetDammV2LaunchesResponse,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -82,6 +88,27 @@ export class TokenLaunchService extends BaseService {
 		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>('/token-launch/create-token-info', formData, {
 			headers: {
 				...formData.getHeaders(),
+			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get confirmed DAMM v2 direct launches
+	 *
+	 * Newest-first, paginated list of confirmed DAMM v2 direct launches, optionally filtered
+	 * by quote mint.
+	 *
+	 * @param params Pagination and filter options
+	 * @returns The page of launches
+	 */
+	async getDammV2Launches(params: GetDammV2LaunchesParams = {}): Promise<GetDammV2LaunchesResponse> {
+		const response = await this.bagsApiClient.get<GetDammV2LaunchesResponse>('/token-launch/damm-v2/launches', {
+			params: {
+				limit: params.limit,
+				quoteMint: params.quoteMint?.toBase58(),
+				cursor: params.cursor,
 			},
 		});
 
