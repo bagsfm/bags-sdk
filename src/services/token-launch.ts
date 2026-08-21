@@ -1,7 +1,12 @@
-import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
+import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+	GetTokenLaunchResponse,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -82,6 +87,22 @@ export class TokenLaunchService extends BaseService {
 		const response = await this.bagsApiClient.post<CreateTokenInfoResponse>('/token-launch/create-token-info', formData, {
 			headers: {
 				...formData.getHeaders(),
+			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get a token launch by mint
+	 *
+	 * @param tokenMint The token mint to look up
+	 * @returns The token launch record, or null if no launch exists for the mint
+	 */
+	async getTokenLaunch(tokenMint: PublicKey): Promise<GetTokenLaunchResponse> {
+		const response = await this.bagsApiClient.get<GetTokenLaunchResponse>('/token-launch', {
+			params: {
+				tokenMint: tokenMint.toBase58(),
 			},
 		});
 

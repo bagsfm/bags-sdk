@@ -40,5 +40,20 @@ describe('TokenLaunchService integration', () => {
 
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
+
+	test('getTokenLaunch returns the token launch for a known mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(new PublicKey(tokenInfoResponse.tokenMint));
+
+		expect(tokenLaunch).not.toBeNull();
+		expect(tokenLaunch?.tokenMint).toBe(tokenInfoResponse.tokenMint);
+	});
+
+	test('getTokenLaunch returns null for an unknown mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(PublicKey.unique());
+
+		expect(tokenLaunch).toBeNull();
+	});
 });
 
