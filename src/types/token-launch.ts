@@ -71,6 +71,8 @@ export interface BagsLaunchPadTokenLaunch {
 	launchWallet: string | null;
 	launchSignature: string | null;
 	uri: string | null;
+	/** DBC launch mode. `null` when the token has no DBC config (pre-launch or DAMM v2 direct). */
+	bagsConfigType: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | null;
 	createdAt: string;
 	updatedAt: string;
 }
