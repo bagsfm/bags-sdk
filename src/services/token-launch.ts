@@ -9,6 +9,7 @@ import {
 	CreateTokenInfoParams,
 	CreateTokenInfoResponse,
 	DammV2SupportedQuoteToken,
+	DammV2VaultClaimable,
 	GetDammV2LaunchesParams,
 	GetDammV2LaunchesResponse,
 	GetTokenLaunchBulkResponse,
@@ -98,6 +99,24 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get DAMM v2 vault claimables
+	 *
+	 * Every non-empty partner/deployer aggregate vault balance for a wallet.
+	 *
+	 * @param wallet The partner/deployer wallet to look up
+	 * @returns The claimable vault balances
+	 */
+	async getDammV2VaultClaimables(wallet: PublicKey): Promise<DammV2VaultClaimable[]> {
+		const response = await this.bagsApiClient.get<{ vaults: DammV2VaultClaimable[] }>('/token-launch/damm-v2/vault-claimables', {
+			params: {
+				wallet: wallet.toBase58(),
+			},
+		});
+
+		return response.vaults;
 	}
 
 	/**

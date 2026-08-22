@@ -42,6 +42,13 @@ describe('TokenLaunchService integration', () => {
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
 
+	test('getDammV2VaultClaimables returns an array of vault balances', async () => {
+		const sdk = getTestSdk();
+		const vaults = await sdk.tokenLaunch.getDammV2VaultClaimables(testEnv.launchWallet);
+
+		expect(Array.isArray(vaults)).toBe(true);
+	});
+
 	test('getDammV2SupportedQuoteTokens returns a list of quote tokens', async () => {
 		const sdk = getTestSdk();
 		const tokens = await sdk.tokenLaunch.getDammV2SupportedQuoteTokens();
