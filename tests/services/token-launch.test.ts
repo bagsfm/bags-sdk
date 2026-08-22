@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import { LAMPORTS_PER_SOL, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { getTestSdk } from '../helpers/sdk';
 import { testEnv } from '../helpers/env';
+import { ApiError } from '../../src/api/bags-client';
 import type { CreateTokenInfoResponse } from '../../src/types/token-launch';
 
 let tokenInfoResponse: CreateTokenInfoResponse;
@@ -46,6 +47,78 @@ describe('TokenLaunchService integration', () => {
 		const vaults = await sdk.tokenLaunch.getDammV2VaultClaimables(testEnv.launchWallet);
 
 		expect(Array.isArray(vaults)).toBe(true);
+	});
+
+	test('getDammV2SupportedQuoteTokens returns a list of quote tokens', async () => {
+		const sdk = getTestSdk();
+		const tokens = await sdk.tokenLaunch.getDammV2SupportedQuoteTokens();
+
+		expect(Array.isArray(tokens)).toBe(true);
+
+		if (tokens.length > 0) {
+			const [first] = tokens;
+			expect(() => new PublicKey(first.mint)).not.toThrow();
+		}
+	});
+
+	test('getTokenLaunchesBulk preserves order and returns null for unknown mints', async () => {
+		const sdk = getTestSdk();
+		const unknownMint = PublicKey.unique();
+		const tokenLaunches = await sdk.tokenLaunch.getTokenLaunchesBulk([
+			new PublicKey(tokenInfoResponse.tokenMint),
+			unknownMint,
+		]);
+
+		expect(tokenLaunches).toHaveLength(2);
+		expect(tokenLaunches[0]?.tokenMint).toBe(tokenInfoResponse.tokenMint);
+		expect(tokenLaunches[1]).toBeNull();
+	});
+
+	test('getTokenLaunch returns the token launch for a known mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(new PublicKey(tokenInfoResponse.tokenMint));
+
+		expect(tokenLaunch).not.toBeNull();
+		expect(tokenLaunch?.tokenMint).toBe(tokenInfoResponse.tokenMint);
+	});
+
+	test('getDammV2Launches returns a paginated page of launches', async () => {
+		const sdk = getTestSdk();
+		const page = await sdk.tokenLaunch.getDammV2Launches({ limit: 5 });
+
+		expect(Array.isArray(page.launches)).toBe(true);
+		expect(page.launches.length).toBeLessThanOrEqual(5);
+		expect(typeof page.hasMore).toBe('boolean');
+
+		if (page.launches.length > 0) {
+			const [first] = page.launches;
+			expect(() => new PublicKey(first.tokenMint)).not.toThrow();
+		}
+	});
+
+	test('claimDammV2Vault returns a claim transaction, or throws "Nothing to claim" for an empty vault', async () => {
+		const sdk = getTestSdk();
+
+		try {
+			const result = await sdk.tokenLaunch.claimDammV2Vault({
+				kind: 'partner',
+				wallet: testEnv.launchWallet,
+				quoteMint: testEnv.quoteMint,
+			});
+
+			expect(result.transaction).toBeInstanceOf(VersionedTransaction);
+			expect(result.claimable.wallet).toBe(testEnv.launchWallet.toBase58());
+		} catch (error) {
+			expect(error).toBeInstanceOf(ApiError);
+			expect((error as ApiError).status).toBe(400);
+		}
+	});
+
+	test('getTokenLaunch returns null for an unknown mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(PublicKey.unique());
+
+		expect(tokenLaunch).toBeNull();
 	});
 });
 
