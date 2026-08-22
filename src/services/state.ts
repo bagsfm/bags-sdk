@@ -9,12 +9,17 @@ import type {
 	BagsTokenLeaderBoardItem,
 	EvmTokenCreator,
 	FeeShareWalletChain,
+	GetGlobalClaimFeedV2Options,
+	GetGlobalClaimFeedV2Response,
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimEventsSuccessResponse,
 	GetTokenClaimStatsV2Response,
+	GetTokenClaimStatsV4Options,
+	GetTokenClaimStatsV4Response,
 	SupportedSocialProvider,
 	TokenClaimEvent,
+	TokenClaimStatsV4,
 	TokenLaunchCreator,
 	TokenLaunchCreatorV3WithClaimStats,
 } from '../types/api';
@@ -225,6 +230,72 @@ export class StateService {
 		});
 
 		console.log(response);
+		return response;
+	}
+
+	/**
+	 * Get the global claim feed v2
+	 *
+	 * Returns fee-claim events across all tokens, newest first. Each event carries the mint
+	 * the amount was claimed in, that mint's decimals, and a read-time USD value, so claims
+	 * denominated in a pool's quote mint rather than SOL are represented correctly.
+	 *
+	 * Page backwards by passing the last event's `timestamp` as `before`. Forced claims are
+	 * excluded from this feed.
+	 *
+	 * @param options Optional pagination, amount bounds, and first-claim filtering
+	 * @returns The claim events and whether older events remain
+	 */
+	async getGlobalClaimFeedV2(options: GetGlobalClaimFeedV2Options = {}): Promise<GetGlobalClaimFeedV2Response> {
+		const { limit, before, minAmount, maxAmount, onlyFirstClaims } = options;
+
+		if (limit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > 100)) {
+			throw new Error('limit must be an integer between 1 and 100');
+		}
+
+		const params: Record<string, string | number> = {};
+
+		if (limit !== undefined) params.limit = limit;
+		if (before !== undefined) params.before = before;
+		if (minAmount !== undefined) params.minAmount = minAmount;
+		if (maxAmount !== undefined) params.maxAmount = maxAmount;
+		if (onlyFirstClaims !== undefined) params.onlyFirstClaims = String(onlyFirstClaims);
+
+		const response = await this.bagsApiClient.get<GetGlobalClaimFeedV2Response>('/feed/global-claim/v2', {
+			params,
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get token claim stats v4
+	 *
+	 * Reports claim totals per wallet broken down by the mint each amount was claimed in,
+	 * with a read-time USD conversion. Covers claims denominated in a pool's quote mint,
+	 * which `getTokenClaimStats` folds into a single SOL total and cannot represent.
+	 *
+	 * @param options Either the token mint to aggregate claims for, or the wallet to aggregate across all tokens it claimed on, plus optional forced-claim and user-enrichment flags
+	 * @returns The per-mint claim totals, sorted by total USD value descending
+	 */
+	async getTokenClaimStatsV4(options: GetTokenClaimStatsV4Options): Promise<Array<TokenClaimStatsV4>> {
+		const { tokenMint, wallet, includeForceClaim, includeUser } = options;
+
+		if ((tokenMint && wallet) || (!tokenMint && !wallet)) {
+			throw new Error('Either tokenMint or wallet must be provided, but not both');
+		}
+
+		const params: Record<string, string> = {};
+
+		if (tokenMint) params.tokenMint = tokenMint.toBase58();
+		if (wallet) params.wallet = wallet.toBase58();
+		if (includeForceClaim !== undefined) params.includeForceClaim = String(includeForceClaim);
+		if (includeUser !== undefined) params.includeUser = String(includeUser);
+
+		const response = await this.bagsApiClient.get<GetTokenClaimStatsV4Response>('/token-launch/claim-stats/v4', {
+			params,
+		});
+
 		return response;
 	}
 
