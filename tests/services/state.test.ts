@@ -98,5 +98,104 @@ describe('StateService integration', () => {
 			expect(Number(entry.totalClaimed)).toBeGreaterThanOrEqual(0);
 		}
 	});
+
+	test('getGlobalClaimFeedV2 returns claim events newest first with per-mint denomination', async () => {
+		const { state } = getTestSdk();
+		const feed = await state.getGlobalClaimFeedV2({ limit: 10 });
+
+		expect(Array.isArray(feed.events)).toBe(true);
+		expect(typeof feed.hasMore).toBe('boolean');
+		expect(feed.events.length).toBeGreaterThan(0);
+		expect(feed.events.length).toBeLessThanOrEqual(10);
+
+		for (const event of feed.events) {
+			expect(() => new PublicKey(event.tokenMint)).not.toThrow();
+			expect(() => new PublicKey(event.wallet)).not.toThrow();
+			expect(() => new PublicKey(event.mint)).not.toThrow();
+
+			expect(typeof event.amount).toBe('string');
+			expect(Number(event.amount)).toBeGreaterThan(0);
+
+			expect(Number.isInteger(event.decimals)).toBe(true);
+			expect(typeof event.signature).toBe('string');
+			expect(Number.isInteger(event.timestamp)).toBe(true);
+			expect(typeof event.isFirstClaim).toBe('boolean');
+
+			if (event.amountUsd !== null) {
+				expect(typeof event.amountUsd).toBe('number');
+			}
+		}
+
+		const timestamps = feed.events.map((event) => event.timestamp);
+		const sortedDescending = [...timestamps].sort((a, b) => b - a);
+		expect(timestamps).toEqual(sortedDescending);
+	});
+
+	test('getTokenClaimStatsV4 returns per-mint claim amounts for the requested token mint', async () => {
+		const { state } = getTestSdk();
+		const stats = await state.getTokenClaimStatsV4({ tokenMint: testEnv.tokenMint });
+
+		expect(Array.isArray(stats)).toBe(true);
+		expect(stats.length).toBeGreaterThan(0);
+
+		const expectedMint = testEnv.tokenMint.toBase58();
+
+		for (const entry of stats) {
+			expect(typeof entry.wallet).toBe('string');
+			expect(() => new PublicKey(entry.wallet)).not.toThrow();
+
+			expect(entry.tokenMint).toBe(expectedMint);
+
+			expect(Array.isArray(entry.claims)).toBe(true);
+			expect(entry.claims.length).toBeGreaterThan(0);
+
+			for (const claim of entry.claims) {
+				expect(() => new PublicKey(claim.mint)).not.toThrow();
+
+				expect(typeof claim.decimals).toBe('number');
+				expect(Number.isInteger(claim.decimals)).toBe(true);
+
+				expect(typeof claim.amount).toBe('string');
+				expect(Number(claim.amount)).toBeGreaterThan(0);
+
+				if (claim.amountUsd !== null) {
+					expect(typeof claim.amountUsd).toBe('number');
+					expect(claim.amountUsd).toBeGreaterThanOrEqual(0);
+				}
+			}
+
+			if (entry.totalClaimedUsd !== null) {
+				expect(typeof entry.totalClaimedUsd).toBe('number');
+			}
+		}
+	});
+
+	test('getTokenClaimStatsV4 rejects queries that are not exactly one of tokenMint or wallet', async () => {
+		const { state } = getTestSdk();
+
+		await expect(state.getTokenClaimStatsV4({})).rejects.toThrow();
+		await expect(state.getTokenClaimStatsV4({ tokenMint: testEnv.tokenMint, wallet: testEnv.tokenMint })).rejects.toThrow();
+	});
+
+	test('getGlobalClaimFeedV2 pages backwards with the before cursor', async () => {
+		const { state } = getTestSdk();
+		const first = await state.getGlobalClaimFeedV2({ limit: 5 });
+
+		expect(first.events.length).toBeGreaterThan(0);
+
+		const cursor = first.events[first.events.length - 1].timestamp;
+		const next = await state.getGlobalClaimFeedV2({ limit: 5, before: cursor });
+
+		for (const event of next.events) {
+			expect(event.timestamp).toBeLessThan(cursor);
+		}
+	});
+
+	test('getGlobalClaimFeedV2 rejects an out-of-range limit', async () => {
+		const { state } = getTestSdk();
+
+		await expect(state.getGlobalClaimFeedV2({ limit: 0 })).rejects.toThrow();
+		await expect(state.getGlobalClaimFeedV2({ limit: 101 })).rejects.toThrow();
+	});
 });
 

@@ -4,7 +4,8 @@ import { maxKey, sortKeys } from '../src/utils/fee-share';
 import { chunkArray } from '../src/utils/helpers';
 import { getFeeVaultPda } from '../src/utils/fee-claim';
 import { detectImageInputType, prepareImageForFormData } from '../src/utils/image';
-import { isValidUrl, validateAndNormalizeCreateTokenInfoParams } from '../src/utils/validations';
+import { isValidUrl, validateAndNormalizeCreateFeeShareConfigParams, validateAndNormalizeCreateTokenInfoParams } from '../src/utils/validations';
+import { BAGS_CONFIG_TYPE } from '../src/types/api';
 import { BAGS_FEE_SHARE_V2_PROGRAM_ID, BAGS_METEORA_FEE_CLAIMER_VAULT_PDA_SEED } from '../src/constants';
 
 describe('fee-share utils', () => {
@@ -257,6 +258,27 @@ describe('validation utilities', () => {
 		expect(() => validateAndNormalizeCreateTokenInfoParams({ ...base, website: 'not-a-url' } as any)).toThrow(
 			'website must be a valid URL'
 		);
+	});
+
+	test('validateAndNormalizeCreateFeeShareConfigParams defaults bagsConfigType to DEFAULT', () => {
+		const payload = validateAndNormalizeCreateFeeShareConfigParams({
+			payer: new PublicKey(new Uint8Array(32).fill(1)),
+			baseMint: new PublicKey(new Uint8Array(32).fill(2)),
+			feeClaimers: [{ user: new PublicKey(new Uint8Array(32).fill(3)), userBps: 10_000 }],
+		});
+
+		expect(payload.bagsConfigType).toBe(BAGS_CONFIG_TYPE.DEFAULT);
+	});
+
+	test('validateAndNormalizeCreateFeeShareConfigParams keeps an explicit bagsConfigType', () => {
+		const payload = validateAndNormalizeCreateFeeShareConfigParams({
+			payer: new PublicKey(new Uint8Array(32).fill(1)),
+			baseMint: new PublicKey(new Uint8Array(32).fill(2)),
+			feeClaimers: [{ user: new PublicKey(new Uint8Array(32).fill(3)), userBps: 10_000 }],
+			bagsConfigType: BAGS_CONFIG_TYPE.DEFAULT_96_LOCKED,
+		});
+
+		expect(payload.bagsConfigType).toBe(BAGS_CONFIG_TYPE.DEFAULT_96_LOCKED);
 	});
 });
 
