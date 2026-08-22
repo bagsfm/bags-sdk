@@ -1,11 +1,18 @@
-import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
+import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
 import {
+	ClaimDammV2VaultParams,
+	ClaimDammV2VaultResponse,
+	ClaimDammV2VaultWireResponse,
 	CreateLaunchTransactionParams,
 	CreateTokenInfoParams,
 	CreateTokenInfoResponse,
 	DammV2SupportedQuoteToken,
+	GetDammV2LaunchesParams,
+	GetDammV2LaunchesResponse,
+	GetTokenLaunchBulkResponse,
+	GetTokenLaunchResponse,
 } from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
@@ -101,10 +108,88 @@ export class TokenLaunchService extends BaseService {
 	 * @returns The supported quote tokens
 	 */
 	async getDammV2SupportedQuoteTokens(): Promise<DammV2SupportedQuoteToken[]> {
-		const response = await this.bagsApiClient.get<{ tokens: DammV2SupportedQuoteToken[] }>(
-			'/token-launch/damm-v2/supported-quote-tokens',
-		);
+		const response = await this.bagsApiClient.get<{ tokens: DammV2SupportedQuoteToken[] }>('/token-launch/damm-v2/supported-quote-tokens');
 
 		return response.tokens;
+	}
+
+	/**
+	 * Get token launches in bulk
+	 *
+	 * Fetches token launch records for up to 100 token mints in one request. Results
+	 * preserve input order, with `null` for a mint that has no launch record.
+	 *
+	 * @param tokenMints The token mints to look up (1-100 unique keys)
+	 * @returns The token launch records, in the same order as `tokenMints`
+	 */
+	async getTokenLaunchesBulk(tokenMints: PublicKey[]): Promise<GetTokenLaunchBulkResponse> {
+		const response = await this.bagsApiClient.post<GetTokenLaunchBulkResponse>('/token-launch/bulk', {
+			tokenMints: tokenMints.map((tokenMint) => tokenMint.toBase58()),
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get a token launch by mint
+	 *
+	 * @param tokenMint The token mint to look up
+	 * @returns The token launch record, or null if no launch exists for the mint
+	 */
+	async getTokenLaunch(tokenMint: PublicKey): Promise<GetTokenLaunchResponse> {
+		const response = await this.bagsApiClient.get<GetTokenLaunchResponse>('/token-launch', {
+			params: {
+				tokenMint: tokenMint.toBase58(),
+			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get confirmed DAMM v2 direct launches
+	 *
+	 * Newest-first, paginated list of confirmed DAMM v2 direct launches, optionally filtered
+	 * by quote mint.
+	 *
+	 * @param params Pagination and filter options
+	 * @returns The page of launches
+	 */
+	async getDammV2Launches(params: GetDammV2LaunchesParams = {}): Promise<GetDammV2LaunchesResponse> {
+		const response = await this.bagsApiClient.get<GetDammV2LaunchesResponse>('/token-launch/damm-v2/launches', {
+			params: {
+				limit: params.limit,
+				quoteMint: params.quoteMint?.toBase58(),
+				cursor: params.cursor,
+			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Claim a DAMM v2 partner/deployer vault
+	 *
+	 * Sweeps the caller's partner or deployer aggregate vault for a quote mint to their
+	 * wallet. The returned transaction is gas-sponsored: the gas sponsor is the fee payer,
+	 * and `params.wallet` only needs to co-sign as the authorizer. Throws if the vault is
+	 * empty ("Nothing to claim").
+	 *
+	 * @param params The vault to claim
+	 * @returns The claim transaction and the claimable balance it sweeps
+	 */
+	async claimDammV2Vault(params: ClaimDammV2VaultParams): Promise<ClaimDammV2VaultResponse> {
+		const response = await this.bagsApiClient.post<ClaimDammV2VaultWireResponse>('/token-launch/damm-v2/claim-vault', {
+			kind: params.kind,
+			wallet: params.wallet.toBase58(),
+			quoteMint: params.quoteMint.toBase58(),
+		});
+
+		const decodedTransaction = bs58.decode(response.transaction);
+
+		return {
+			transaction: VersionedTransaction.deserialize(decodedTransaction),
+			claimable: response.claimable,
+		};
 	}
 }

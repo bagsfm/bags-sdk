@@ -70,9 +70,71 @@ export interface BagsLaunchPadTokenLaunch {
 	status: TokenLaunchStatus;
 	launchWallet: string | null;
 	launchSignature: string | null;
+	/** Launch transaction account keys. */
+	accountKeys: string[] | null;
+	/** Number of required launch transaction signers. */
+	numRequiredSigners: number | null;
+	/** Creator fee in basis points. */
+	creatorFeeBps: number | null;
 	uri: string | null;
+	/** Meteora DBC pool address. */
+	dbcPoolKey: string | null;
+	/** Meteora DBC config address. */
+	dbcConfigKey: string | null;
+	/** DBC launch mode. `null` when the token has no `dbcConfigKey` (pre-launch or DAMM v2 direct). */
+	bagsConfigType: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | null;
+	/** DAMM v2 pool address. */
+	dammV2PoolKey: string | null;
+	/** Launch mechanism; `null` means legacy DBC. */
+	launchType: string | null;
+	/** DAMM v2 direct quote mint. */
+	quoteMint: string | null;
+	/** Treasury position NFT mint. */
+	dammV2TreasuryPositionNftMint: string | null;
+	/** Fee claimer position NFT mint. */
+	dammV2FeeClaimerPositionNftMint: string | null;
+	/** Fee claimer wallet. */
+	feeClaimerWallet: string | null;
+	/** Address lookup table used by the launch. */
+	dammV2LookupTable: string | null;
+	/** DAMM v2 position custody account. */
+	dammV2PositionCustody: string | null;
+	/** Authority for the DAMM v2 custody account. */
+	dammV2CustodyAuthority: string | null;
+	/** Optional custody partner wallet. */
+	dammV2Partner: string | null;
+	/** Optional custody deployer wallet. */
+	dammV2Deployer: string | null;
+	/** Deployer fee collection mode. */
+	dammV2DeployerFeeCollectionMode: number | null;
+	/** Deployer platform fee in basis points. */
+	dammV2DeployerPlatformBps: number | null;
+	/** Deployer claimer fee in basis points. */
+	dammV2DeployerClaimersBps: number | null;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export type TokenLaunchResponseItem = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
+
+export type DammV2DirectLaunch = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
+
+export interface GetDammV2LaunchesParams {
+	/** Page size, 1-100. Defaults to 20 server-side. */
+	limit?: number;
+	/** Base58 quote mint to filter launches by. */
+	quoteMint?: PublicKey;
+	/** Cursor from a previous response's `nextCursor`. Omit for the first page. */
+	cursor?: string;
+}
+
+export interface GetDammV2LaunchesResponse {
+	/** Confirmed DAMM v2 direct launches, newest first. */
+	launches: DammV2DirectLaunch[];
+	/** True when another page of results exists. */
+	hasMore: boolean;
+	/** Cursor to pass as `cursor` to fetch the next page, or null on the last page. */
+	nextCursor: string | null;
 }
 
 export interface CreateTokenInfoResponse {
@@ -147,3 +209,50 @@ export interface DammV2SupportedQuoteToken {
 	/** Token image URL, or `null` when neither a CDN image nor an image URI is set. */
 	image: string | null;
 }
+
+export type DammV2VaultKind = 'partner' | 'deployer';
+
+export interface DammV2VaultClaimable {
+	/** Which aggregate vault this balance belongs to. */
+	kind: DammV2VaultKind;
+	/** Public key of the partner/deployer wallet. */
+	wallet: string;
+	/** Public key of the quote mint this vault is denominated in. */
+	quoteMint: string;
+	/** Decimals of the quote mint. */
+	quoteDecimals: number;
+	/** Public key of the vault's associated token account. */
+	vaultAta: string;
+	/** Claimable balance in quote mint base units. */
+	claimableAmount: number;
+	/** Claimable balance in whole quote tokens. */
+	claimableDisplayAmount: number;
+}
+
+export interface ClaimDammV2VaultParams {
+	/** Which aggregate vault to sweep. */
+	kind: DammV2VaultKind;
+	/** The partner/deployer wallet whose vault is being swept (also the destination). */
+	wallet: PublicKey;
+	/** Quote mint of the vault to sweep. */
+	quoteMint: PublicKey;
+}
+
+export interface ClaimDammV2VaultResponse {
+	/**
+	 * Gas-sponsored transaction that drains the vault to the wallet's ATA. The gas sponsor
+	 * is the fee payer; `params.wallet` only needs to co-sign as the authorizer.
+	 */
+	transaction: VersionedTransaction;
+	claimable: DammV2VaultClaimable;
+}
+
+/** @internal Wire shape before the transaction is decoded. */
+export interface ClaimDammV2VaultWireResponse {
+	transaction: string;
+	claimable: DammV2VaultClaimable;
+}
+
+export type GetTokenLaunchResponse = TokenLaunchResponseItem | null;
+
+export type GetTokenLaunchBulkResponse = Array<TokenLaunchResponseItem | null>;
