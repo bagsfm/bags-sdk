@@ -9,6 +9,8 @@ import type {
 	BagsTokenLeaderBoardItem,
 	EvmTokenCreator,
 	FeeShareWalletChain,
+	GetGlobalClaimFeedV2Options,
+	GetGlobalClaimFeedV2Response,
 	GetLaunchWalletV2BulkRequestItem,
 	GetPoolConfigKeyByFeeClaimerVaultApiResponse,
 	GetTokenClaimEventsSuccessResponse,
@@ -228,6 +230,41 @@ export class StateService {
 		});
 
 		console.log(response);
+		return response;
+	}
+
+	/**
+	 * Get the global claim feed v2
+	 *
+	 * Returns fee-claim events across all tokens, newest first. Each event carries the mint
+	 * the amount was claimed in, that mint's decimals, and a read-time USD value, so claims
+	 * denominated in a pool's quote mint rather than SOL are represented correctly.
+	 *
+	 * Page backwards by passing the last event's `timestamp` as `before`. Forced claims are
+	 * excluded from this feed.
+	 *
+	 * @param options Optional pagination, amount bounds, and first-claim filtering
+	 * @returns The claim events and whether older events remain
+	 */
+	async getGlobalClaimFeedV2(options: GetGlobalClaimFeedV2Options = {}): Promise<GetGlobalClaimFeedV2Response> {
+		const { limit, before, minAmount, maxAmount, onlyFirstClaims } = options;
+
+		if (limit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > 100)) {
+			throw new Error('limit must be an integer between 1 and 100');
+		}
+
+		const params: Record<string, string | number> = {};
+
+		if (limit !== undefined) params.limit = limit;
+		if (before !== undefined) params.before = before;
+		if (minAmount !== undefined) params.minAmount = minAmount;
+		if (maxAmount !== undefined) params.maxAmount = maxAmount;
+		if (onlyFirstClaims !== undefined) params.onlyFirstClaims = String(onlyFirstClaims);
+
+		const response = await this.bagsApiClient.get<GetGlobalClaimFeedV2Response>('/feed/global-claim/v2', {
+			params,
+		});
+
 		return response;
 	}
 
