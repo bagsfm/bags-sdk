@@ -42,6 +42,20 @@ describe('TokenLaunchService integration', () => {
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
 
+	test('getDammV2Launches returns a paginated page of launches', async () => {
+		const sdk = getTestSdk();
+		const page = await sdk.tokenLaunch.getDammV2Launches({ limit: 5 });
+
+		expect(Array.isArray(page.launches)).toBe(true);
+		expect(page.launches.length).toBeLessThanOrEqual(5);
+		expect(typeof page.hasMore).toBe('boolean');
+
+		if (page.launches.length > 0) {
+			const [first] = page.launches;
+			expect(() => new PublicKey(first.tokenMint)).not.toThrow();
+		}
+	});
+
 	test('claimDammV2Vault returns a claim transaction, or throws "Nothing to claim" for an empty vault', async () => {
 		const sdk = getTestSdk();
 

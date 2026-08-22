@@ -71,8 +71,30 @@ export interface BagsLaunchPadTokenLaunch {
 	launchWallet: string | null;
 	launchSignature: string | null;
 	uri: string | null;
+	/** DBC launch mode. `null` when the token has no DBC config (pre-launch or DAMM v2 direct). */
+	bagsConfigType: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | null;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export type DammV2DirectLaunch = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
+
+export interface GetDammV2LaunchesParams {
+	/** Page size, 1-100. Defaults to 20 server-side. */
+	limit?: number;
+	/** Base58 quote mint to filter launches by. */
+	quoteMint?: PublicKey;
+	/** Cursor from a previous response's `nextCursor`. Omit for the first page. */
+	cursor?: string;
+}
+
+export interface GetDammV2LaunchesResponse {
+	/** Confirmed DAMM v2 direct launches, newest first. */
+	launches: DammV2DirectLaunch[];
+	/** True when another page of results exists. */
+	hasMore: boolean;
+	/** Cursor to pass as `cursor` to fetch the next page, or null on the last page. */
+	nextCursor: string | null;
 }
 
 export interface CreateTokenInfoResponse {
