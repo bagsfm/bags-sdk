@@ -1,7 +1,13 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateDammV2LaunchTransactionParams,
+	CreateDammV2LaunchTransactionResponse,
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -83,6 +89,31 @@ export class TokenLaunchService extends BaseService {
 			headers: {
 				...formData.getHeaders(),
 			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Create a DAMM v2 direct launch transaction bundle
+	 *
+	 * Builds the partially-signed transaction bundle that launches a token previously
+	 * registered via `createTokenInfoAndMetadata` straight into a single-sided DAMM v2
+	 * customizable pool (no DBC bonding curve, no migration). Every transaction in the
+	 * bundle must be co-signed by `params.wallet` before submission.
+	 *
+	 * @param params The parameters for the DAMM v2 direct launch
+	 * @returns The transaction bundle and launch details
+	 */
+	async createDammV2LaunchTransaction(params: CreateDammV2LaunchTransactionParams): Promise<CreateDammV2LaunchTransactionResponse> {
+		const response = await this.bagsApiClient.post<CreateDammV2LaunchTransactionResponse>('/token-launch/damm-v2/create-transaction', {
+			ipfs: params.metadataUrl,
+			tokenMint: params.tokenMint.toBase58(),
+			wallet: params.wallet.toBase58(),
+			quoteMint: params.quoteMint.toBase58(),
+			feeClaimerWallet: params.feeClaimerWallet?.toBase58(),
+			initialBuyQuoteAmount: params.initialBuyQuoteAmount,
+			partner: params.partner?.toBase58(),
 		});
 
 		return response;

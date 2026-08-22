@@ -40,5 +40,19 @@ describe('TokenLaunchService integration', () => {
 
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
+
+	test('createDammV2LaunchTransaction returns a launch transaction bundle', async () => {
+		const sdk = getTestSdk();
+		const result = await sdk.tokenLaunch.createDammV2LaunchTransaction({
+			metadataUrl: tokenInfoResponse.tokenMetadata,
+			tokenMint: new PublicKey(tokenInfoResponse.tokenMint),
+			wallet: testEnv.launchWallet,
+			quoteMint: testEnv.quoteMint,
+		});
+
+		expect(Array.isArray(result.transactions)).toBe(true);
+		expect(result.transactions.length).toBeGreaterThan(0);
+		expect(result.launch.tokenMint).toBe(tokenInfoResponse.tokenMint);
+	});
 });
 

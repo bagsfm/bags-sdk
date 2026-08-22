@@ -21,6 +21,53 @@ export interface CreateLaunchTransactionParams {
 	tipConfig?: TransactionTipConfig;
 }
 
+export interface CreateDammV2LaunchTransactionParams {
+	/** Metadata URI from `createTokenInfoAndMetadata`. */
+	metadataUrl: string;
+	/** Mint from `createTokenInfoAndMetadata`. */
+	tokenMint: PublicKey;
+	/** Launch wallet; fee payer and signer of every transaction in the bundle. */
+	wallet: PublicKey;
+	/** Badged quote mint (see `getDammV2SupportedQuoteTokens`). */
+	quoteMint: PublicKey;
+	/** Receives the 50% fee position NFT; defaults to `wallet`. */
+	feeClaimerWallet?: PublicKey;
+	/** Initial buy amount in quote mint base units; `wallet` must already hold this quote balance at build time. */
+	initialBuyQuoteAmount?: number;
+	/** Existing PartnerConfig wallet to attach to the custody (its global bps applies). */
+	partner?: PublicKey;
+}
+
+export type DammV2LaunchTransactionBundleItemType = 'LUT_SETUP' | 'CREATE_TOKEN' | 'LAUNCH' | 'LUT_DEACTIVATE' | 'LUT_CLOSE';
+
+export interface DammV2LaunchTransactionBundleItem {
+	/** Which step of the launch bundle this transaction performs. */
+	type: DammV2LaunchTransactionBundleItemType;
+	/** Base58-encoded serialized transaction. */
+	transaction: string;
+}
+
+export interface DammV2LaunchDetails {
+	tokenMint: string;
+	quoteMint: string;
+	quoteTokenProgram: string;
+	pool: string;
+	treasuryPositionNftMint: string;
+	feeClaimerPositionNftMint: string;
+	feeClaimerWallet: string;
+	lookupTable: string;
+	positionCustody: string;
+	custodyAuthority: string;
+	launchPriceQuotePerToken: number;
+	impliedLaunchFdvUsd: number;
+}
+
+export interface CreateDammV2LaunchTransactionResponse {
+	/** Ordered transaction bundle; each must be co-signed by `wallet` before submission. */
+	transactions: DammV2LaunchTransactionBundleItem[];
+	launch: DammV2LaunchDetails;
+}
+
 /**
  * Parameters for creating token info and (optionally) uploading metadata.
  *
