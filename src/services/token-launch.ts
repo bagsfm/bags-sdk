@@ -1,7 +1,12 @@
 import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+	DammV2SupportedQuoteToken,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -86,5 +91,20 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get DAMM v2 supported quote tokens
+	 *
+	 * Every quote mint currently usable for DAMM v2 direct launches.
+	 *
+	 * @returns The supported quote tokens
+	 */
+	async getDammV2SupportedQuoteTokens(): Promise<DammV2SupportedQuoteToken[]> {
+		const response = await this.bagsApiClient.get<{ tokens: DammV2SupportedQuoteToken[] }>(
+			'/token-launch/damm-v2/supported-quote-tokens',
+		);
+
+		return response.tokens;
 	}
 }
