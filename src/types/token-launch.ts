@@ -117,9 +117,25 @@ export interface BagsLaunchPadTokenLaunch {
 
 export type TokenLaunchResponseItem = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
 
-export type GetTokenLaunchResponse = TokenLaunchResponseItem | null;
+export type DammV2DirectLaunch = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
 
-export type GetTokenLaunchBulkResponse = Array<TokenLaunchResponseItem | null>;
+export interface GetDammV2LaunchesParams {
+	/** Page size, 1-100. Defaults to 20 server-side. */
+	limit?: number;
+	/** Base58 quote mint to filter launches by. */
+	quoteMint?: PublicKey;
+	/** Cursor from a previous response's `nextCursor`. Omit for the first page. */
+	cursor?: string;
+}
+
+export interface GetDammV2LaunchesResponse {
+	/** Confirmed DAMM v2 direct launches, newest first. */
+	launches: DammV2DirectLaunch[];
+	/** True when another page of results exists. */
+	hasMore: boolean;
+	/** Cursor to pass as `cursor` to fetch the next page, or null on the last page. */
+	nextCursor: string | null;
+}
 
 export interface CreateTokenInfoResponse {
 	tokenMint: string;
@@ -177,3 +193,50 @@ export type NormalizedCreateFeeShareConfigParams = {
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
 	enableFirstSwapWithMinFee?: boolean;
 };
+
+export type DammV2VaultKind = 'partner' | 'deployer';
+
+export interface DammV2VaultClaimable {
+	/** Which aggregate vault this balance belongs to. */
+	kind: DammV2VaultKind;
+	/** Public key of the partner/deployer wallet. */
+	wallet: string;
+	/** Public key of the quote mint this vault is denominated in. */
+	quoteMint: string;
+	/** Decimals of the quote mint. */
+	quoteDecimals: number;
+	/** Public key of the vault's associated token account. */
+	vaultAta: string;
+	/** Claimable balance in quote mint base units. */
+	claimableAmount: number;
+	/** Claimable balance in whole quote tokens. */
+	claimableDisplayAmount: number;
+}
+
+export interface ClaimDammV2VaultParams {
+	/** Which aggregate vault to sweep. */
+	kind: DammV2VaultKind;
+	/** The partner/deployer wallet whose vault is being swept (also the destination). */
+	wallet: PublicKey;
+	/** Quote mint of the vault to sweep. */
+	quoteMint: PublicKey;
+}
+
+export interface ClaimDammV2VaultResponse {
+	/**
+	 * Gas-sponsored transaction that drains the vault to the wallet's ATA. The gas sponsor
+	 * is the fee payer; `params.wallet` only needs to co-sign as the authorizer.
+	 */
+	transaction: VersionedTransaction;
+	claimable: DammV2VaultClaimable;
+}
+
+/** @internal Wire shape before the transaction is decoded. */
+export interface ClaimDammV2VaultWireResponse {
+	transaction: string;
+	claimable: DammV2VaultClaimable;
+}
+
+export type GetTokenLaunchResponse = TokenLaunchResponseItem | null;
+
+export type GetTokenLaunchBulkResponse = Array<TokenLaunchResponseItem | null>;

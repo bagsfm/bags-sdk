@@ -2,9 +2,14 @@ import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana
 import { BaseService } from './base';
 import bs58 from 'bs58';
 import {
+	ClaimDammV2VaultParams,
+	ClaimDammV2VaultResponse,
+	ClaimDammV2VaultWireResponse,
 	CreateLaunchTransactionParams,
 	CreateTokenInfoParams,
 	CreateTokenInfoResponse,
+	GetDammV2LaunchesParams,
+	GetDammV2LaunchesResponse,
 	GetTokenLaunchResponse,
 } from '../types/token-launch';
 import FormData from 'form-data';
@@ -107,5 +112,52 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get confirmed DAMM v2 direct launches
+	 *
+	 * Newest-first, paginated list of confirmed DAMM v2 direct launches, optionally filtered
+	 * by quote mint.
+	 *
+	 * @param params Pagination and filter options
+	 * @returns The page of launches
+	 */
+	async getDammV2Launches(params: GetDammV2LaunchesParams = {}): Promise<GetDammV2LaunchesResponse> {
+		const response = await this.bagsApiClient.get<GetDammV2LaunchesResponse>('/token-launch/damm-v2/launches', {
+			params: {
+				limit: params.limit,
+				quoteMint: params.quoteMint?.toBase58(),
+				cursor: params.cursor,
+			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Claim a DAMM v2 partner/deployer vault
+	 *
+	 * Sweeps the caller's partner or deployer aggregate vault for a quote mint to their
+	 * wallet. The returned transaction is gas-sponsored: the gas sponsor is the fee payer,
+	 * and `params.wallet` only needs to co-sign as the authorizer. Throws if the vault is
+	 * empty ("Nothing to claim").
+	 *
+	 * @param params The vault to claim
+	 * @returns The claim transaction and the claimable balance it sweeps
+	 */
+	async claimDammV2Vault(params: ClaimDammV2VaultParams): Promise<ClaimDammV2VaultResponse> {
+		const response = await this.bagsApiClient.post<ClaimDammV2VaultWireResponse>('/token-launch/damm-v2/claim-vault', {
+			kind: params.kind,
+			wallet: params.wallet.toBase58(),
+			quoteMint: params.quoteMint.toBase58(),
+		});
+
+		const decodedTransaction = bs58.decode(response.transaction);
+
+		return {
+			transaction: VersionedTransaction.deserialize(decodedTransaction),
+			claimable: response.claimable,
+		};
 	}
 }
