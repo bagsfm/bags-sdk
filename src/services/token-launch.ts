@@ -1,7 +1,12 @@
-import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
+import { Commitment, Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
-import { CreateLaunchTransactionParams, CreateTokenInfoParams, CreateTokenInfoResponse } from '../types/token-launch';
+import {
+	CreateLaunchTransactionParams,
+	CreateTokenInfoParams,
+	CreateTokenInfoResponse,
+	DammV2VaultClaimable,
+} from '../types/token-launch';
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
@@ -86,5 +91,26 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get DAMM v2 vault claimables
+	 *
+	 * Every non-empty partner/deployer aggregate vault balance for a wallet.
+	 *
+	 * @param wallet The partner/deployer wallet to look up
+	 * @returns The claimable vault balances
+	 */
+	async getDammV2VaultClaimables(wallet: PublicKey): Promise<DammV2VaultClaimable[]> {
+		const response = await this.bagsApiClient.get<{ vaults: DammV2VaultClaimable[] }>(
+			'/token-launch/damm-v2/vault-claimables',
+			{
+				params: {
+					wallet: wallet.toBase58(),
+				},
+			},
+		);
+
+		return response.vaults;
 	}
 }

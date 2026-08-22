@@ -131,3 +131,22 @@ export type NormalizedCreateFeeShareConfigParams = {
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
 	enableFirstSwapWithMinFee?: boolean;
 };
+
+export type DammV2VaultKind = 'partner' | 'deployer';
+
+export interface DammV2VaultClaimable {
+	/** Which aggregate vault this balance belongs to. */
+	kind: DammV2VaultKind;
+	/** Public key of the partner/deployer wallet. */
+	wallet: string;
+	/** Public key of the quote mint this vault is denominated in. */
+	quoteMint: string;
+	/** Decimals of the quote mint. */
+	quoteDecimals: number;
+	/** Public key of the vault's associated token account. */
+	vaultAta: string;
+	/** Claimable balance in quote mint base units. */
+	claimableAmount: number;
+	/** Claimable balance in whole quote tokens. */
+	claimableDisplayAmount: number;
+}
