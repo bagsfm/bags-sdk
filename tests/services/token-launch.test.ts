@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import { LAMPORTS_PER_SOL, PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { getTestSdk } from '../helpers/sdk';
 import { testEnv } from '../helpers/env';
+import { ApiError } from '../../src/api/bags-client';
 import type { CreateTokenInfoResponse } from '../../src/types/token-launch';
 
 let tokenInfoResponse: CreateTokenInfoResponse;
@@ -52,6 +53,24 @@ describe('TokenLaunchService integration', () => {
 		if (page.launches.length > 0) {
 			const [first] = page.launches;
 			expect(() => new PublicKey(first.tokenMint)).not.toThrow();
+		}
+	});
+
+	test('claimDammV2Vault returns a claim transaction, or throws "Nothing to claim" for an empty vault', async () => {
+		const sdk = getTestSdk();
+
+		try {
+			const result = await sdk.tokenLaunch.claimDammV2Vault({
+				kind: 'partner',
+				wallet: testEnv.launchWallet,
+				quoteMint: testEnv.quoteMint,
+			});
+
+			expect(result.transaction).toBeInstanceOf(VersionedTransaction);
+			expect(result.claimable.wallet).toBe(testEnv.launchWallet.toBase58());
+		} catch (error) {
+			expect(error).toBeInstanceOf(ApiError);
+			expect((error as ApiError).status).toBe(400);
 		}
 	});
 });

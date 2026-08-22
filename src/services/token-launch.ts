@@ -2,6 +2,9 @@ import { Commitment, Connection, VersionedTransaction } from '@solana/web3.js';
 import { BaseService } from './base';
 import bs58 from 'bs58';
 import {
+	ClaimDammV2VaultParams,
+	ClaimDammV2VaultResponse,
+	ClaimDammV2VaultWireResponse,
 	CreateLaunchTransactionParams,
 	CreateTokenInfoParams,
 	CreateTokenInfoResponse,
@@ -113,5 +116,31 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Claim a DAMM v2 partner/deployer vault
+	 *
+	 * Sweeps the caller's partner or deployer aggregate vault for a quote mint to their
+	 * wallet. The returned transaction is gas-sponsored: the gas sponsor is the fee payer,
+	 * and `params.wallet` only needs to co-sign as the authorizer. Throws if the vault is
+	 * empty ("Nothing to claim").
+	 *
+	 * @param params The vault to claim
+	 * @returns The claim transaction and the claimable balance it sweeps
+	 */
+	async claimDammV2Vault(params: ClaimDammV2VaultParams): Promise<ClaimDammV2VaultResponse> {
+		const response = await this.bagsApiClient.post<ClaimDammV2VaultWireResponse>('/token-launch/damm-v2/claim-vault', {
+			kind: params.kind,
+			wallet: params.wallet.toBase58(),
+			quoteMint: params.quoteMint.toBase58(),
+		});
+
+		const decodedTransaction = bs58.decode(response.transaction);
+
+		return {
+			transaction: VersionedTransaction.deserialize(decodedTransaction),
+			claimable: response.claimable,
+		};
 	}
 }

@@ -153,3 +153,46 @@ export type NormalizedCreateFeeShareConfigParams = {
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
 	enableFirstSwapWithMinFee?: boolean;
 };
+
+export type DammV2VaultKind = 'partner' | 'deployer';
+
+export interface DammV2VaultClaimable {
+	/** Which aggregate vault this balance belongs to. */
+	kind: DammV2VaultKind;
+	/** Public key of the partner/deployer wallet. */
+	wallet: string;
+	/** Public key of the quote mint this vault is denominated in. */
+	quoteMint: string;
+	/** Decimals of the quote mint. */
+	quoteDecimals: number;
+	/** Public key of the vault's associated token account. */
+	vaultAta: string;
+	/** Claimable balance in quote mint base units. */
+	claimableAmount: number;
+	/** Claimable balance in whole quote tokens. */
+	claimableDisplayAmount: number;
+}
+
+export interface ClaimDammV2VaultParams {
+	/** Which aggregate vault to sweep. */
+	kind: DammV2VaultKind;
+	/** The partner/deployer wallet whose vault is being swept (also the destination). */
+	wallet: PublicKey;
+	/** Quote mint of the vault to sweep. */
+	quoteMint: PublicKey;
+}
+
+export interface ClaimDammV2VaultResponse {
+	/**
+	 * Gas-sponsored transaction that drains the vault to the wallet's ATA. The gas sponsor
+	 * is the fee payer; `params.wallet` only needs to co-sign as the authorizer.
+	 */
+	transaction: VersionedTransaction;
+	claimable: DammV2VaultClaimable;
+}
+
+/** @internal Wire shape before the transaction is decoded. */
+export interface ClaimDammV2VaultWireResponse {
+	transaction: string;
+	claimable: DammV2VaultClaimable;
+}
