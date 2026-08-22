@@ -10,6 +10,7 @@ import {
 	CreateTokenInfoResponse,
 	GetDammV2LaunchesParams,
 	GetDammV2LaunchesResponse,
+	GetTokenLaunchBulkResponse,
 	GetTokenLaunchResponse,
 } from '../types/token-launch';
 import FormData from 'form-data';
@@ -93,6 +94,23 @@ export class TokenLaunchService extends BaseService {
 			headers: {
 				...formData.getHeaders(),
 			},
+		});
+
+		return response;
+	}
+
+	/**
+	 * Get token launches in bulk
+	 *
+	 * Fetches token launch records for up to 100 token mints in one request. Results
+	 * preserve input order, with `null` for a mint that has no launch record.
+	 *
+	 * @param tokenMints The token mints to look up (1-100 unique keys)
+	 * @returns The token launch records, in the same order as `tokenMints`
+	 */
+	async getTokenLaunchesBulk(tokenMints: PublicKey[]): Promise<GetTokenLaunchBulkResponse> {
+		const response = await this.bagsApiClient.post<GetTokenLaunchBulkResponse>('/token-launch/bulk', {
+			tokenMints: tokenMints.map((tokenMint) => tokenMint.toBase58()),
 		});
 
 		return response;
