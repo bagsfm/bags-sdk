@@ -42,6 +42,14 @@ describe('TokenLaunchService integration', () => {
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
 
+	test('getTokenLaunch returns the token launch for a known mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(new PublicKey(tokenInfoResponse.tokenMint));
+
+		expect(tokenLaunch).not.toBeNull();
+		expect(tokenLaunch?.tokenMint).toBe(tokenInfoResponse.tokenMint);
+	});
+
 	test('getDammV2Launches returns a paginated page of launches', async () => {
 		const sdk = getTestSdk();
 		const page = await sdk.tokenLaunch.getDammV2Launches({ limit: 5 });
@@ -72,6 +80,13 @@ describe('TokenLaunchService integration', () => {
 			expect(error).toBeInstanceOf(ApiError);
 			expect((error as ApiError).status).toBe(400);
 		}
+	});
+
+	test('getTokenLaunch returns null for an unknown mint', async () => {
+		const sdk = getTestSdk();
+		const tokenLaunch = await sdk.tokenLaunch.getTokenLaunch(PublicKey.unique());
+
+		expect(tokenLaunch).toBeNull();
 	});
 });
 

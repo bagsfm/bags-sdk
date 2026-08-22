@@ -70,12 +70,52 @@ export interface BagsLaunchPadTokenLaunch {
 	status: TokenLaunchStatus;
 	launchWallet: string | null;
 	launchSignature: string | null;
+	/** Launch transaction account keys. */
+	accountKeys: string[] | null;
+	/** Number of required launch transaction signers. */
+	numRequiredSigners: number | null;
+	/** Creator fee in basis points. */
+	creatorFeeBps: number | null;
 	uri: string | null;
-	/** DBC launch mode. `null` when the token has no DBC config (pre-launch or DAMM v2 direct). */
+	/** Meteora DBC pool address. */
+	dbcPoolKey: string | null;
+	/** Meteora DBC config address. */
+	dbcConfigKey: string | null;
+	/** DBC launch mode. `null` when the token has no `dbcConfigKey` (pre-launch or DAMM v2 direct). */
 	bagsConfigType: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | null;
+	/** DAMM v2 pool address. */
+	dammV2PoolKey: string | null;
+	/** Launch mechanism; `null` means legacy DBC. */
+	launchType: string | null;
+	/** DAMM v2 direct quote mint. */
+	quoteMint: string | null;
+	/** Treasury position NFT mint. */
+	dammV2TreasuryPositionNftMint: string | null;
+	/** Fee claimer position NFT mint. */
+	dammV2FeeClaimerPositionNftMint: string | null;
+	/** Fee claimer wallet. */
+	feeClaimerWallet: string | null;
+	/** Address lookup table used by the launch. */
+	dammV2LookupTable: string | null;
+	/** DAMM v2 position custody account. */
+	dammV2PositionCustody: string | null;
+	/** Authority for the DAMM v2 custody account. */
+	dammV2CustodyAuthority: string | null;
+	/** Optional custody partner wallet. */
+	dammV2Partner: string | null;
+	/** Optional custody deployer wallet. */
+	dammV2Deployer: string | null;
+	/** Deployer fee collection mode. */
+	dammV2DeployerFeeCollectionMode: number | null;
+	/** Deployer platform fee in basis points. */
+	dammV2DeployerPlatformBps: number | null;
+	/** Deployer claimer fee in basis points. */
+	dammV2DeployerClaimersBps: number | null;
 	createdAt: string;
 	updatedAt: string;
 }
+
+export type TokenLaunchResponseItem = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
 
 export type DammV2DirectLaunch = Omit<BagsLaunchPadTokenLaunch, 'userId'>;
 
@@ -196,3 +236,7 @@ export interface ClaimDammV2VaultWireResponse {
 	transaction: string;
 	claimable: DammV2VaultClaimable;
 }
+
+export type GetTokenLaunchResponse = TokenLaunchResponseItem | null;
+
+export type GetTokenLaunchBulkResponse = Array<TokenLaunchResponseItem | null>;
