@@ -194,6 +194,22 @@ export type NormalizedCreateFeeShareConfigParams = {
 	enableFirstSwapWithMinFee?: boolean;
 };
 
+export interface DammV2SupportedQuoteToken {
+	/** Quote mint public key. */
+	mint: string;
+	/** Token program that owns the mint (`Tokenkeg...` or `TokenzQd...`). */
+	tokenProgram: string;
+	decimals: number;
+	/** Token 2022 on-chain name, or `null` when the mint has no TokenMetadata extension. */
+	name: string | null;
+	/** Token 2022 on-chain symbol, or `null` when the mint has no TokenMetadata extension. */
+	symbol: string | null;
+	/** Token 2022 metadata JSON URI, or `null` when the mint has no TokenMetadata extension. */
+	uri: string | null;
+	/** Token image URL, or `null` when neither a CDN image nor an image URI is set. */
+	image: string | null;
+}
+
 export type DammV2VaultKind = 'partner' | 'deployer';
 
 export interface DammV2VaultClaimable {

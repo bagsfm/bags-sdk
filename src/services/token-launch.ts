@@ -8,6 +8,7 @@ import {
 	CreateLaunchTransactionParams,
 	CreateTokenInfoParams,
 	CreateTokenInfoResponse,
+	DammV2SupportedQuoteToken,
 	GetDammV2LaunchesParams,
 	GetDammV2LaunchesResponse,
 	GetTokenLaunchBulkResponse,
@@ -97,6 +98,19 @@ export class TokenLaunchService extends BaseService {
 		});
 
 		return response;
+	}
+
+	/**
+	 * Get DAMM v2 supported quote tokens
+	 *
+	 * Every quote mint currently usable for DAMM v2 direct launches.
+	 *
+	 * @returns The supported quote tokens
+	 */
+	async getDammV2SupportedQuoteTokens(): Promise<DammV2SupportedQuoteToken[]> {
+		const response = await this.bagsApiClient.get<{ tokens: DammV2SupportedQuoteToken[] }>('/token-launch/damm-v2/supported-quote-tokens');
+
+		return response.tokens;
 	}
 
 	/**

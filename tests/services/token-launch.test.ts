@@ -42,6 +42,18 @@ describe('TokenLaunchService integration', () => {
 		expect(transaction).toBeInstanceOf(VersionedTransaction);
 	});
 
+	test('getDammV2SupportedQuoteTokens returns a list of quote tokens', async () => {
+		const sdk = getTestSdk();
+		const tokens = await sdk.tokenLaunch.getDammV2SupportedQuoteTokens();
+
+		expect(Array.isArray(tokens)).toBe(true);
+
+		if (tokens.length > 0) {
+			const [first] = tokens;
+			expect(() => new PublicKey(first.mint)).not.toThrow();
+		}
+	});
+
 	test('getTokenLaunchesBulk preserves order and returns null for unknown mints', async () => {
 		const sdk = getTestSdk();
 		const unknownMint = PublicKey.unique();
