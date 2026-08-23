@@ -46,42 +46,94 @@ export async function waitForSlotsToPass(connection: Connection, commitment: Com
 	}
 }
 
+const COMMITMENT_RANK: Record<string, number> = {
+	processed: 0,
+	confirmed: 1,
+	finalized: 2,
+};
+
+function isCommitmentSatisfied(status: string | null | undefined, commitment: Commitment): boolean {
+	if (!status) {
+		return false;
+	}
+
+	// Non-standard commitments (e.g. 'recent', 'single') default to the 'confirmed' rank
+	const targetRank = COMMITMENT_RANK[commitment] ?? COMMITMENT_RANK.confirmed;
+	const statusRank = COMMITMENT_RANK[status] ?? -1;
+
+	return statusRank >= targetRank;
+}
+
+/**
+ * Signs a transaction and continuously rebroadcasts it until it reaches the desired
+ * commitment level or the blockhash expires.
+ *
+ * The transaction is sent with `skipPreflight: true` and `maxRetries: 0`, and this
+ * function takes over retrying: it resends the raw transaction on every poll cycle
+ * while checking the signature status, until `lastValidBlockHeight` is exceeded.
+ * @param connection - The connection to send the transaction through
+ * @param commitment - The commitment level to confirm the transaction at
+ * @param transaction - The transaction to sign and send
+ * @param keypair - The keypair to sign the transaction with
+ * @param blockhash - (optional) The blockhash used in the transaction. Should match the
+ * transaction's recent blockhash; if omitted, the latest blockhash is fetched for expiry tracking.
+ * @param options - (optional) Resend/poll interval in milliseconds (default: 1000ms)
+ * @returns The transaction signature
+ */
 export async function signAndSendTransaction(
 	connection: Connection,
 	commitment: Commitment,
 	transaction: VersionedTransaction,
 	keypair: Keypair,
-	blockhash?: BlockhashWithExpiryBlockHeight
+	blockhash?: BlockhashWithExpiryBlockHeight,
+	options: { resendIntervalMs?: number } = {}
 ): Promise<string> {
+	const resendIntervalMs = options.resendIntervalMs ?? 1000;
+
 	transaction.sign([keypair]);
 
-	let finalBlockhash = blockhash;
+	const rawTransaction = transaction.serialize();
+	const finalBlockhash = blockhash ?? (await connection.getLatestBlockhash(commitment));
 
-	if (!blockhash) {
-		finalBlockhash = await connection.getLatestBlockhash(commitment);
-	} else {
-		finalBlockhash = blockhash;
-	}
-
-	const signature = await connection.sendTransaction(transaction, {
+	const signature = await connection.sendRawTransaction(rawTransaction, {
 		skipPreflight: true,
 		maxRetries: 0,
 	});
 
-	const confirmed = await connection.confirmTransaction(
-		{
-			blockhash: finalBlockhash.blockhash,
-			lastValidBlockHeight: finalBlockhash.lastValidBlockHeight,
-			signature: signature,
-		},
-		commitment
-	);
+	while (true) {
+		const { value: status } = await connection.getSignatureStatus(signature, {
+			searchTransactionHistory: false,
+		});
 
-	if (confirmed.value.err) {
-		throw new Error(`Transaction failed: ${confirmed.value.err}`);
+		if (status) {
+			if (status.err) {
+				throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+			}
+
+			if (isCommitmentSatisfied(status.confirmationStatus, commitment)) {
+				return signature;
+			}
+		}
+
+		const currentBlockHeight = await connection.getBlockHeight(commitment);
+
+		if (currentBlockHeight > finalBlockhash.lastValidBlockHeight) {
+			throw new Error(
+				`Transaction ${signature} was not confirmed before the blockhash expired (block height ${currentBlockHeight} > ${finalBlockhash.lastValidBlockHeight})`
+			);
+		}
+
+		try {
+			await connection.sendRawTransaction(rawTransaction, {
+				skipPreflight: true,
+				maxRetries: 0,
+			});
+		} catch {
+			// Resend failures are non-fatal (e.g. "already processed"); status polling decides the outcome
+		}
+
+		await sleep(resendIntervalMs);
 	}
-
-	return signature;
 }
 
 /**
