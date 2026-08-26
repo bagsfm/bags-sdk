@@ -11,6 +11,7 @@ import { FeeShareAdminService } from './services/fee-share-admin';
 import { DexscreenerService } from './services/dexscreener';
 import { AuthService } from './services/auth';
 import { RobinhoodService } from './services/robinhood';
+import { DividendsService } from './services/dividends';
 
 export class BagsSDK {
 	public bagsApiClient: BagsApiClient;
@@ -25,6 +26,7 @@ export class BagsSDK {
 	public dexscreener: DexscreenerService;
 	public auth: AuthService;
 	public robinhood: RobinhoodService;
+	public dividends: DividendsService;
 
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
 		this.bagsApiClient = new BagsApiClient(apiKey);
@@ -39,5 +41,6 @@ export class BagsSDK {
 		this.dexscreener = new DexscreenerService(apiKey, connection, commitment);
 		this.auth = new AuthService(apiKey, connection, commitment);
 		this.robinhood = new RobinhoodService(apiKey, connection, commitment);
+		this.dividends = new DividendsService(apiKey, connection, commitment);
 	}
 }

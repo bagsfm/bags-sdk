@@ -1,6 +1,7 @@
 import { PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BAGS_CONFIG_TYPE, TransactionTipConfig } from './api';
 import type { ImageInput } from '../utils/image';
+import type { DividendConstituentInput } from './dividends';
 
 export type GetOrCreateConfigResponse = {
 	transaction: VersionedTransaction | null;
@@ -19,6 +20,12 @@ export interface CreateLaunchTransactionParams {
 	initialBuyLamports: number;
 	configKey: PublicKey;
 	tipConfig?: TransactionTipConfig;
+	/**
+	 * Optional dividend basket, validated and persisted before the launch transaction is built
+	 * (a rejected constituent means no coin is launched). 1-10 entries, bps summing to exactly
+	 * 10000, no duplicate mints, no self-mint.
+	 */
+	dividendProfile?: DividendConstituentInput[];
 }
 
 export interface CreateDammV2LaunchTransactionParams {
@@ -36,6 +43,12 @@ export interface CreateDammV2LaunchTransactionParams {
 	initialBuyQuoteAmount?: number;
 	/** Existing PartnerConfig wallet to attach to the custody (its global bps applies). */
 	partner?: PublicKey;
+	/**
+	 * Optional dividend basket, validated and persisted before any transaction is built (a
+	 * rejected constituent means no coin is minted). 1-10 entries, bps summing to exactly
+	 * 10000, no duplicate mints, no self-mint.
+	 */
+	dividendProfile?: DividendConstituentInput[];
 }
 
 export type DammV2LaunchTransactionBundleItemType = 'LUT_SETUP' | 'CREATE_TOKEN' | 'LAUNCH' | 'LUT_DEACTIVATE' | 'LUT_CLOSE';
