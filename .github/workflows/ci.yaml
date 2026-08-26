@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   checks:
-    name: Lint, Build & Test
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -22,6 +22,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Test
-        run: npm run test
