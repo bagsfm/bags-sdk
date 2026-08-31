@@ -28,7 +28,7 @@ export interface CreateDammV2LaunchTransactionParams {
 	tokenMint: PublicKey;
 	/** Launch wallet; fee payer and signer of every transaction in the bundle. */
 	wallet: PublicKey;
-	/** Badged quote mint (see `getDammV2SupportedQuoteTokens`). */
+	/** Quote mint eligible at build time (see `getDammV2SupportedQuoteTokens`) — must hold a cp-amm TokenBadge and currently be in the Jupiter trending-stocks whitelist; eligibility can change as the whitelist rotates. */
 	quoteMint: PublicKey;
 	/** Receives the 50% fee position NFT; defaults to `wallet`. */
 	feeClaimerWallet?: PublicKey;

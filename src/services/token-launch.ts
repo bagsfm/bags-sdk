@@ -109,7 +109,9 @@ export class TokenLaunchService extends BaseService {
 	 * Builds the partially-signed transaction bundle that launches a token previously
 	 * registered via `createTokenInfoAndMetadata` straight into a single-sided DAMM v2
 	 * customizable pool (no DBC bonding curve, no migration). Every transaction in the
-	 * bundle must be co-signed by `params.wallet` before submission.
+	 * bundle must be co-signed by `params.wallet` before submission. `params.quoteMint`
+	 * must currently be badged and in the Jupiter trending-stocks whitelist; a mint that
+	 * built successfully before can fail here if it has since rotated out.
 	 *
 	 * @param params The parameters for the DAMM v2 direct launch
 	 * @returns The transaction bundle and launch details
@@ -149,7 +151,9 @@ export class TokenLaunchService extends BaseService {
 	/**
 	 * Get DAMM v2 supported quote tokens
 	 *
-	 * Every quote mint currently usable for DAMM v2 direct launches.
+	 * Every quote mint currently usable for DAMM v2 direct launches: mints holding a
+	 * cp-amm TokenBadge that are also in the Jupiter trending-stocks whitelist (top 100
+	 * by 24h volume, refreshed every 6 hours). A mint can rotate in and out of this list.
 	 *
 	 * @returns The supported quote tokens
 	 */
