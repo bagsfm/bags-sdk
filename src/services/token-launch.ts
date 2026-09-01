@@ -41,6 +41,7 @@ export class TokenLaunchService extends BaseService {
 			configKey: params.configKey.toBase58(),
 			tipWallet: params.tipConfig ? params.tipConfig.tipWallet.toBase58() : undefined,
 			tipLamports: params.tipConfig ? params.tipConfig.tipLamports : undefined,
+			dividendProfile: params.dividendProfile?.map((entry) => ({ mint: entry.mint.toBase58(), bps: entry.bps })),
 		});
 
 		const decodedSignedTransaction = bs58.decode(encodedSignedTransaction);
@@ -123,6 +124,7 @@ export class TokenLaunchService extends BaseService {
 			feeClaimerWallet: params.feeClaimerWallet?.toBase58(),
 			initialBuyQuoteAmount: params.initialBuyQuoteAmount,
 			partner: params.partner?.toBase58(),
+			dividendProfile: params.dividendProfile?.map((entry) => ({ mint: entry.mint.toBase58(), bps: entry.bps })),
 		});
 
 		return response;
