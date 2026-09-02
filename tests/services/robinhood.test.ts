@@ -23,6 +23,8 @@ describe('RobinhoodService getTopVolume', () => {
 		expect(typeof item.address).toBe('string');
 		expect(typeof item.volumeEthWei).toBe('string');
 		expect(typeof item.bondingProgressPct).toBe('number');
+		expect(typeof item.volume24hEthWei).toBe('string');
+		expect(item.priceChange24hPct === null || typeof item.priceChange24hPct === 'number').toBe(true);
 	});
 
 	test('items are sorted by volumeEthWei descending', () => {

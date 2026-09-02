@@ -29,6 +29,15 @@ export interface RobinhoodToken {
 export interface RobinhoodTopVolumeItem extends RobinhoodToken {
 	priceEthPerToken: string | null;
 	bondingProgressPct: number;
+	/**
+	 * Spot price change over the last 24h in percent units (e.g. `-12.34` means -12.34%).
+	 * Baseline is the last trade at or before 24h ago, falling back to the curve's initial
+	 * spot for tokens with no trade before that cutoff. Null only when `priceEthPerToken`
+	 * is null (or the baseline could not be resolved) — 0 is a real "unchanged" value.
+	 */
+	priceChange24hPct: number | null;
+	/** ETH-leg trade volume over the last 24h, in wei as a decimal string. */
+	volume24hEthWei: string;
 	volumeEthWei: string;
 }
 
