@@ -22,7 +22,10 @@ describe('RobinhoodService getTopVolume', () => {
 
 		expect(typeof item.address).toBe('string');
 		expect(typeof item.volumeEthWei).toBe('string');
+		expect(typeof item.volumeQuoteWei).toBe('string');
 		expect(typeof item.bondingProgressPct).toBe('number');
+		expect(typeof item.quote.address).toBe('string');
+		expect(typeof item.quote.symbol).toBe('string');
 	});
 
 	test('items are sorted by volumeEthWei descending', () => {
@@ -42,6 +45,12 @@ describe.skipIf(!testEnv.robinhoodOwner)('RobinhoodService integration', () => {
 	test('getClaimablePositions returns positions and truncation state', () => {
 		expect(Array.isArray(claimablePositions.positions)).toBe(true);
 		expect(typeof claimablePositions.truncated).toBe('boolean');
+
+		const position = claimablePositions.positions[0];
+
+		if (position) {
+			expect(typeof position.quote.address).toBe('string');
+		}
 	});
 
 	test('createClaimTransactions returns unsigned EVM transactions', async () => {
@@ -57,7 +66,8 @@ describe.skipIf(!testEnv.robinhoodOwner)('RobinhoodService integration', () => {
 		});
 
 		expect(result.chainId).toBe(4663);
-		expect(result.unwrap).toBe(true);
+		expect(typeof result.unwrap).toBe('boolean');
+		expect(typeof result.quote.address).toBe('string');
 		expect(result.transactions.length).toBeGreaterThan(0);
 
 		result.transactions.forEach((transaction) => {
