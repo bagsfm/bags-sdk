@@ -78,3 +78,71 @@ export type CreateSwapTransactionResult = {
 	lastValidBlockHeight: number;
 	prioritizationFeeLamports: number;
 };
+
+export type TradeV2Provider = 'auto' | 'jupiter' | 'titan';
+
+export type TradeV2ProviderServed = 'jupiter' | 'titan';
+
+export type TradeV2TransactionSpeed = 'normal' | 'fast' | 'turbo';
+
+export type GetTradeV2QuoteParams = {
+	inputMint: PublicKey;
+	outputMint: PublicKey;
+	taker: PublicKey;
+	amount: string;
+	slippageBps?: number | 'auto';
+	transactionSpeed?: TradeV2TransactionSpeed;
+	provider?: TradeV2Provider;
+};
+
+export type NormalizedGetTradeV2QuoteParams = {
+	inputMint: string;
+	outputMint: string;
+	taker: string;
+	amount: string;
+	slippageBps?: number | 'auto';
+	transactionSpeed?: TradeV2TransactionSpeed;
+	provider?: TradeV2Provider;
+};
+
+export interface TradeV2QuoteResponse {
+	requestId: string;
+	provider: TradeV2ProviderServed;
+	inputMint: string;
+	outputMint: string;
+	inAmount: string;
+	outAmount: string;
+	slippageBps: number;
+	feeLamports: string;
+	expiresAtMs: number | null;
+}
+
+export type CreateTradeV2SwapParams = {
+	requestId: string;
+	userPublicKey: PublicKey;
+};
+
+export type NormalizedCreateTradeV2SwapParams = {
+	requestId: string;
+	userPublicKey: string;
+};
+
+export interface TradeV2SwapTransactionResponse {
+	swapTransaction: string;
+	computeUnitLimit: number;
+	prioritizationFeeLamports: number;
+	lastValidBlockHeight: number;
+	feeLamports: string;
+	revenueLamports: string;
+	provider: TradeV2ProviderServed;
+}
+
+export type CreateTradeV2SwapResult = {
+	transaction: VersionedTransaction;
+	computeUnitLimit: number;
+	prioritizationFeeLamports: number;
+	lastValidBlockHeight: number;
+	feeLamports: string;
+	revenueLamports: string;
+	provider: TradeV2ProviderServed;
+};

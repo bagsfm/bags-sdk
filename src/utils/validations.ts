@@ -4,11 +4,13 @@ import {
 	CreateDexscreenerOrderParams,
 	CreateTokenInfoParams,
 	GetTradeQuoteParams,
+	GetTradeV2QuoteParams,
 	BAGS_CONFIG_TYPE,
 	NormalizedCreateDexscreenerOrderParams,
 	NormalizedCreateFeeShareConfigParams,
 	NormalizedCreateTokenInfoParams,
 	NormalizedGetTradeQuoteParams,
+	NormalizedGetTradeV2QuoteParams,
 	TransactionTipConfig,
 } from '../types';
 
@@ -189,6 +191,30 @@ export function validateAndNormalizeGetTradeQuoteParams(params: GetTradeQuotePar
 	}
 
 	return normalized;
+}
+
+export function validateAndNormalizeGetTradeV2QuoteParams(params: GetTradeV2QuoteParams): NormalizedGetTradeV2QuoteParams {
+	if (!/^[1-9]\d{0,19}$/.test(params.amount)) {
+		throw new Error('amount must be a positive integer string of raw base units (1-20 digits, no leading zeros)');
+	}
+
+	if (params.slippageBps !== undefined && params.slippageBps !== 'auto') {
+		const slippageBps = Number(params.slippageBps);
+
+		if (!Number.isFinite(slippageBps) || slippageBps < 0 || slippageBps > 10_000) {
+			throw new Error('slippageBps must be "auto" or a number between 0 and 10000');
+		}
+	}
+
+	return {
+		inputMint: params.inputMint.toBase58(),
+		outputMint: params.outputMint.toBase58(),
+		taker: params.taker.toBase58(),
+		amount: params.amount,
+		slippageBps: params.slippageBps,
+		transactionSpeed: params.transactionSpeed,
+		provider: params.provider,
+	};
 }
 
 export function validateAndNormalizeCreateDexscreenerOrderParams(params: CreateDexscreenerOrderParams): NormalizedCreateDexscreenerOrderParams {
