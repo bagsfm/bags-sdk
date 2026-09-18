@@ -78,3 +78,82 @@ export type CreateSwapTransactionResult = {
 	lastValidBlockHeight: number;
 	prioritizationFeeLamports: number;
 };
+
+export type TradeV2Provider = 'auto' | 'jupiter' | 'titan';
+
+export type TradeV2ProviderServed = 'jupiter' | 'titan';
+
+export type TradeV2TransactionSpeed = 'normal' | 'fast' | 'turbo';
+
+/** Which leg pays the fee: 'input' is deducted from amount before the quote, 'output' is skimmed from the quoted proceeds. */
+export type TradeV2FeeSide = 'input' | 'output';
+
+export type GetTradeV2QuoteParams = {
+	inputMint: PublicKey;
+	outputMint: PublicKey;
+	taker: PublicKey;
+	amount: string;
+	slippageBps?: number | 'auto';
+	transactionSpeed?: TradeV2TransactionSpeed;
+	provider?: TradeV2Provider;
+};
+
+export type NormalizedGetTradeV2QuoteParams = {
+	inputMint: string;
+	outputMint: string;
+	taker: string;
+	amount: string;
+	slippageBps?: number | 'auto';
+	transactionSpeed?: TradeV2TransactionSpeed;
+	provider?: TradeV2Provider;
+};
+
+export interface TradeV2QuoteResponse {
+	requestId: string;
+	provider: TradeV2ProviderServed;
+	inputMint: string;
+	outputMint: string;
+	inAmount: string;
+	outAmount: string;
+	slippageBps: number;
+	/** Mint the fee is charged in: native SOL wins, else a preferred stablecoin/LST mint, else the input mint. */
+	feeMint: string;
+	feeSide: TradeV2FeeSide;
+	/** Bags treasury fee in raw base units of feeMint (only lamports when feeMint is native SOL). */
+	feeLamports: string;
+	expiresAtMs: number | null;
+}
+
+export type CreateTradeV2SwapParams = {
+	requestId: string;
+	userPublicKey: PublicKey;
+};
+
+export type NormalizedCreateTradeV2SwapParams = {
+	requestId: string;
+	userPublicKey: string;
+};
+
+export interface TradeV2SwapTransactionResponse {
+	swapTransaction: string;
+	computeUnitLimit: number;
+	prioritizationFeeLamports: number;
+	lastValidBlockHeight: number;
+	feeMint: string;
+	feeSide: TradeV2FeeSide;
+	feeLamports: string;
+	revenueLamports: string;
+	provider: TradeV2ProviderServed;
+}
+
+export type CreateTradeV2SwapResult = {
+	transaction: VersionedTransaction;
+	computeUnitLimit: number;
+	prioritizationFeeLamports: number;
+	lastValidBlockHeight: number;
+	feeMint: string;
+	feeSide: TradeV2FeeSide;
+	feeLamports: string;
+	revenueLamports: string;
+	provider: TradeV2ProviderServed;
+};
