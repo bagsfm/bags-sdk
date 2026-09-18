@@ -64,6 +64,11 @@ export class TradeService extends BaseService {
 	 * Fetch a server-built swap quote, racing Jupiter and Titan (when configured).
 	 * The winning quote is cached server-side for 60 seconds under the returned `requestId`.
 	 *
+	 * Every pair is charged the 1% Bags fee, including token-to-token. `feeMint` names the mint
+	 * the fee is charged in (native SOL wins, else a preferred mint, else the input mint) and
+	 * `feeLamports` carries the fee in that mint's raw base units — only lamports when `feeMint`
+	 * is native SOL.
+	 *
 	 * @param params Quote parameters including input/output mints, taker, amount, and provider preferences.
 	 * @returns A trade v2 quote response containing the `requestId` used to build the swap.
 	 */
@@ -98,6 +103,8 @@ export class TradeService extends BaseService {
 			computeUnitLimit: response.computeUnitLimit,
 			prioritizationFeeLamports: response.prioritizationFeeLamports,
 			lastValidBlockHeight: response.lastValidBlockHeight,
+			feeMint: response.feeMint,
+			feeSide: response.feeSide,
 			feeLamports: response.feeLamports,
 			revenueLamports: response.revenueLamports,
 			provider: response.provider,

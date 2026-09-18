@@ -62,6 +62,8 @@ describe('TradeService v2 integration', () => {
 		expect(['jupiter', 'titan']).toContain(quoteV2.provider);
 		expect(typeof quoteV2.inAmount).toBe('string');
 		expect(typeof quoteV2.outAmount).toBe('string');
+		expect(typeof quoteV2.feeMint).toBe('string');
+		expect(['input', 'output']).toContain(quoteV2.feeSide);
 		expect(typeof quoteV2.feeLamports).toBe('string');
 	});
 
@@ -76,6 +78,8 @@ describe('TradeService v2 integration', () => {
 		expect(typeof result.computeUnitLimit).toBe('number');
 		expect(typeof result.lastValidBlockHeight).toBe('number');
 		expect(typeof result.prioritizationFeeLamports).toBe('number');
+		expect(typeof result.feeMint).toBe('string');
+		expect(['input', 'output']).toContain(result.feeSide);
 		expect(typeof result.feeLamports).toBe('string');
 		expect(typeof result.revenueLamports).toBe('string');
 		expect(['jupiter', 'titan']).toContain(result.provider);
