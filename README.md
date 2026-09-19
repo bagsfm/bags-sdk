@@ -79,6 +79,7 @@ new BagsSDK(apiKey: string, connection: Connection, commitment?: Commitment)
 | **Dexscreener** | `sdk.dexscreener` | Check order availability, create orders, and submit payments for Dexscreener listings |
 | **Auth** | `sdk.auth` | Fetch the API key owner's user profile |
 | **Robinhood** | `sdk.robinhood` | List Robinhood Chain claimable positions and build unsigned claim transactions |
+| **Deployer** | `sdk.deployer` | Read a deployer's separate fee-share revenue and build sponsored claim transactions |
 
 ### Exported Utilities
 
