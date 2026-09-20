@@ -235,17 +235,26 @@ export type GlobalClaimEventV2 = {
 	forceClaimType: ForceClaimType | null;
 };
 
+export type ClaimFeedV2Sort = 'time' | 'amount';
+
 export type GetGlobalClaimFeedV2Response = {
 	events: Array<GlobalClaimEventV2>;
 	hasMore: boolean;
+	/** Opaque cursor for the next page. Non-null only for `sort: 'amount'` with more results. */
+	nextCursor: string | null;
 };
 
 export type GetGlobalClaimFeedV2Options = {
 	limit?: number;
+	/** Unix seconds cursor for `sort: 'time'` (the default). Rejected by the API when `sort` is `'amount'`. */
 	before?: number;
 	minAmount?: number;
 	maxAmount?: number;
 	onlyFirstClaims?: boolean;
+	/** `'time'` orders by timestamp descending (default); `'amount'` orders by USD value descending. */
+	sort?: ClaimFeedV2Sort;
+	/** Opaque page cursor for `sort: 'amount'`, taken from the previous response's `nextCursor`. */
+	cursor?: string;
 };
 
 export interface JupiterTokenFirstPool {

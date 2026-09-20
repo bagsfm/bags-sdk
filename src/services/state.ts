@@ -236,18 +236,20 @@ export class StateService {
 	/**
 	 * Get the global claim feed v2
 	 *
-	 * Returns fee-claim events across all tokens, newest first. Each event carries the mint
-	 * the amount was claimed in, that mint's decimals, and a read-time USD value, so claims
-	 * denominated in a pool's quote mint rather than SOL are represented correctly.
+	 * Returns fee-claim events across all tokens. Each event carries the mint the amount was
+	 * claimed in, that mint's decimals, and a read-time USD value, so claims denominated in a
+	 * pool's quote mint rather than SOL are represented correctly.
 	 *
-	 * Page backwards by passing the last event's `timestamp` as `before`. Forced claims are
-	 * excluded from this feed.
+	 * `sort: 'time'` (default) orders newest first; page backwards by passing the last event's
+	 * `timestamp` as `before`. `sort: 'amount'` orders by USD value descending; page by passing
+	 * the response's `nextCursor` back as `cursor`. `before` and `cursor` are mutually exclusive
+	 * with the other sort. Forced claims are excluded from this feed.
 	 *
-	 * @param options Optional pagination, amount bounds, and first-claim filtering
-	 * @returns The claim events and whether older events remain
+	 * @param options Optional pagination, sort, amount bounds, and first-claim filtering
+	 * @returns The claim events, whether more events remain, and the next page's cursor when sorting by amount
 	 */
 	async getGlobalClaimFeedV2(options: GetGlobalClaimFeedV2Options = {}): Promise<GetGlobalClaimFeedV2Response> {
-		const { limit, before, minAmount, maxAmount, onlyFirstClaims } = options;
+		const { limit, before, minAmount, maxAmount, onlyFirstClaims, sort, cursor } = options;
 
 		if (limit !== undefined && (!Number.isInteger(limit) || limit < 1 || limit > 100)) {
 			throw new Error('limit must be an integer between 1 and 100');
@@ -260,6 +262,8 @@ export class StateService {
 		if (minAmount !== undefined) params.minAmount = minAmount;
 		if (maxAmount !== undefined) params.maxAmount = maxAmount;
 		if (onlyFirstClaims !== undefined) params.onlyFirstClaims = String(onlyFirstClaims);
+		if (sort !== undefined) params.sort = sort;
+		if (cursor !== undefined) params.cursor = cursor;
 
 		const response = await this.bagsApiClient.get<GetGlobalClaimFeedV2Response>('/feed/global-claim/v2', {
 			params,

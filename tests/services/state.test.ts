@@ -197,5 +197,32 @@ describe('StateService integration', () => {
 		await expect(state.getGlobalClaimFeedV2({ limit: 0 })).rejects.toThrow();
 		await expect(state.getGlobalClaimFeedV2({ limit: 101 })).rejects.toThrow();
 	});
+
+	test('getGlobalClaimFeedV2 defaults to time sort with a null nextCursor', async () => {
+		const { state } = getTestSdk();
+		const feed = await state.getGlobalClaimFeedV2({ limit: 5 });
+
+		expect(feed.nextCursor).toBeNull();
+	});
+
+	test('getGlobalClaimFeedV2 sort=amount orders by USD value descending and pages with nextCursor', async () => {
+		const { state } = getTestSdk();
+		const first = await state.getGlobalClaimFeedV2({ limit: 5, sort: 'amount' });
+
+		expect(first.events.length).toBeGreaterThan(0);
+
+		const usdValues = first.events.map((event) => event.amountUsd ?? 0);
+		const sortedDescending = [...usdValues].sort((a, b) => b - a);
+		expect(usdValues).toEqual(sortedDescending);
+
+		if (!first.hasMore) {
+			return;
+		}
+
+		expect(typeof first.nextCursor).toBe('string');
+
+		const next = await state.getGlobalClaimFeedV2({ limit: 5, sort: 'amount', cursor: first.nextCursor ?? undefined });
+		expect(Array.isArray(next.events)).toBe(true);
+	});
 });
 
