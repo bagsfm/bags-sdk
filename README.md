@@ -80,6 +80,8 @@ new BagsSDK(apiKey: string, connection: Connection, commitment?: Commitment)
 | **Auth** | `sdk.auth` | Fetch the API key owner's user profile |
 | **Robinhood** | `sdk.robinhood` | List Robinhood Chain claimable positions and build unsigned claim transactions |
 
+`sdk.fee.getClaimTransactions(wallet, tokenMint)` returns `VersionedTransaction[]` for both legacy and v0 transaction messages. Existing sponsor signatures and lookup-table references are preserved. Sign with `transaction.sign([keypair])` or the SDK's `signAndSendTransaction` helper. Callers that used legacy-only methods such as `partialSign` or accessed `transaction.instructions` must update to the versioned transaction API.
+
 ### Exported Utilities
 
 The SDK also exports helper functions and types you can import directly:
