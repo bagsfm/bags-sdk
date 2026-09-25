@@ -3,6 +3,8 @@ import { BaseService } from './base';
 import { TransactionWithBlockhash, TransferFeeShareAdminParams, UpdateFeeShareConfigParams } from '../types';
 import { BAGS_FEE_SHARE_ADMIN_MAX_CLAIMERS_NON_LUT } from '../constants';
 import { ConfigService } from './config';
+import { QuoteTransactionPlan, QuoteTransactionPlanWire, UpdateQuoteFeeShareConfigParams } from '../types/fee-share-quotes';
+import { decodeQuoteTransactionPlan } from '../utils/fee-share-quotes';
 import bs58 from 'bs58';
 
 export class FeeShareAdminService extends BaseService {
@@ -89,5 +91,34 @@ export class FeeShareAdminService extends BaseService {
 		});
 
 		return deserializedTransactionsWithBlockhash;
+	}
+
+	/**
+	 * Build a transaction plan to update the claimer/BPS recipients of a native quote fee
+	 * share config. The caller must own the config's manager wallet.
+	 *
+	 * Returns a staged transaction plan: sign and send the entries in `plan.transactions` in
+	 * order. If `plan.readiness.status` is `setup_required`, confirm the setup transaction(s)
+	 * first, then call this again to fetch the rebuilt plan.
+	 *
+	 * @param params The update config parameters
+	 * @returns The update transaction plan
+	 */
+	async updateQuoteFeeShareConfig(params: UpdateQuoteFeeShareConfigParams): Promise<QuoteTransactionPlan> {
+		const response = await this.bagsApiClient.post<QuoteTransactionPlanWire>('/fee-share/admin/update-config/v2', {
+			transactionFormat: params.transactionFormat,
+			feeLimits: params.feeLimits?.map((feeLimit) => ({
+				asset: { mint: feeLimit.asset.mint.toBase58(), tokenProgram: feeLimit.asset.tokenProgram.toBase58() },
+				basisPoints: feeLimit.basisPoints,
+				maximumFeeRaw: feeLimit.maximumFeeRaw,
+			})),
+			additionalLookupTables: params.additionalLookupTables?.map((table) => table.toBase58()),
+			baseMint: params.baseMint.toBase58(),
+			payer: params.payer.toBase58(),
+			claimersArray: params.claimersArray.map((claimer) => claimer.toBase58()),
+			basisPointsArray: params.basisPointsArray,
+		});
+
+		return decodeQuoteTransactionPlan(response);
 	}
 }

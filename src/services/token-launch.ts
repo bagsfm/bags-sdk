@@ -20,6 +20,17 @@ import {
 import FormData from 'form-data';
 import { prepareImageForFormData } from '../utils/image';
 import { validateAndNormalizeCreateTokenInfoParams } from '../utils/validations';
+import {
+	CreateQuoteClaimTransactionParams,
+	CreateQuoteDbcLaunchTransactionParams,
+	CreateQuoteLaunchTransactionParams,
+	QuoteCapabilitiesResponse,
+	QuoteClaimablesResponse,
+	QuoteTransactionPlan,
+	QuoteTransactionPlanWire,
+	NativeQuoteFlow,
+} from '../types/fee-share-quotes';
+import { decodeQuoteTransactionPlan } from '../utils/fee-share-quotes';
 
 export class TokenLaunchService extends BaseService {
 	constructor(apiKey: string, connection: Connection, commitment: Commitment = 'processed') {
@@ -237,5 +248,142 @@ export class TokenLaunchService extends BaseService {
 			transaction: VersionedTransaction.deserialize(decodedTransaction),
 			claimable: response.claimable,
 		};
+	}
+
+	private buildQuoteLaunchRequestBody(params: CreateQuoteLaunchTransactionParams) {
+		return {
+			transactionFormat: params.transactionFormat,
+			feeLimits: params.feeLimits?.map((feeLimit) => ({
+				asset: { mint: feeLimit.asset.mint.toBase58(), tokenProgram: feeLimit.asset.tokenProgram.toBase58() },
+				basisPoints: feeLimit.basisPoints,
+				maximumFeeRaw: feeLimit.maximumFeeRaw,
+			})),
+			additionalLookupTables: params.additionalLookupTables?.map((table) => table.toBase58()),
+			tokenMint: params.tokenMint.toBase58(),
+			wallet: params.wallet.toBase58(),
+			feeShareConfig: params.feeShareConfig.toBase58(),
+			quoteMint: params.quoteMint.toBase58(),
+			quoteTokenProgram: params.quoteTokenProgram?.toBase58(),
+			ipfs: params.metadataUrl,
+			initialBuyQuoteRaw: params.initialBuyQuoteRaw,
+			tipWallet: params.tipWallet?.toBase58(),
+			tipLamports: params.tipLamports,
+		};
+	}
+
+	/**
+	 * Build a native quote DBC launch transaction plan, denominated in any supported,
+	 * reviewed quote mint, not just wrapped SOL.
+	 *
+	 * Returns a staged transaction plan: sign and send the entries in `plan.transactions` in
+	 * order. If `plan.readiness.status` is `setup_required`, confirm the setup transaction(s)
+	 * first, then call this again to fetch the rebuilt plan.
+	 *
+	 * @param params The parameters for the native quote DBC launch
+	 * @returns The launch transaction plan
+	 */
+	async createQuoteDbcLaunchTransaction(params: CreateQuoteDbcLaunchTransactionParams): Promise<QuoteTransactionPlan> {
+		const response = await this.bagsApiClient.post<QuoteTransactionPlanWire>('/token-launch/create-transaction/v2', {
+			...this.buildQuoteLaunchRequestBody(params),
+			configKey: params.configKey.toBase58(),
+		});
+
+		return decodeQuoteTransactionPlan(response);
+	}
+
+	/**
+	 * Build a native quote DAMM v2 direct launch transaction plan, denominated in any
+	 * supported, reviewed quote mint, not just wrapped SOL.
+	 *
+	 * Returns a staged transaction plan: sign and send the entries in `plan.transactions` in
+	 * order. If `plan.readiness.status` is `setup_required`, confirm the setup transaction(s)
+	 * first, then call this again to fetch the rebuilt plan.
+	 *
+	 * @param params The parameters for the native quote DAMM v2 direct launch
+	 * @returns The launch transaction plan
+	 */
+	async createQuoteDammV2LaunchTransaction(params: CreateQuoteLaunchTransactionParams): Promise<QuoteTransactionPlan> {
+		const response = await this.bagsApiClient.post<QuoteTransactionPlanWire>('/token-launch/damm-v2/create-transaction/v2', this.buildQuoteLaunchRequestBody(params));
+
+		return decodeQuoteTransactionPlan(response);
+	}
+
+	/**
+	 * Get claimable native quote fee positions/holdings for a wallet, across every base mint
+	 * it has a role in. Returns 200 even when individual sources could not be resolved; check
+	 * `issues` on the response.
+	 *
+	 * @param wallet The wallet to check for claimable positions
+	 * @returns The claimable positions
+	 */
+	async getQuoteClaimablePositions(wallet: PublicKey): Promise<QuoteClaimablesResponse> {
+		return this.bagsApiClient.get<QuoteClaimablesResponse>('/token-launch/claimable-positions/v2', {
+			params: { wallet: wallet.toBase58() },
+		});
+	}
+
+	/**
+	 * Get claimable native quote fee positions/holdings for a wallet, scoped to a single base
+	 * mint. Returns 200 even when individual sources could not be resolved; check `issues` on
+	 * the response.
+	 *
+	 * @param wallet The wallet to check for claimable positions
+	 * @param tokenMint The base mint to scope the lookup to
+	 * @returns The claimable positions
+	 */
+	async getQuoteClaimablePosition(wallet: PublicKey, tokenMint: PublicKey): Promise<QuoteClaimablesResponse> {
+		return this.bagsApiClient.get<QuoteClaimablesResponse>('/token-launch/claimable-position/solo/v2', {
+			params: { wallet: wallet.toBase58(), tokenMint: tokenMint.toBase58() },
+		});
+	}
+
+	/**
+	 * Build a transaction plan to claim native quote fees or a holding balance for a wallet.
+	 * The built transaction(s) are fee-sponsored; the fee claimer only needs to cover the
+	 * claim itself.
+	 *
+	 * Returns a staged transaction plan: sign and send the entries in `plan.transactions` in
+	 * order. If `plan.readiness.status` is `setup_required`, confirm the setup transaction(s)
+	 * first, then call this again to fetch the rebuilt plan.
+	 *
+	 * @param params The parameters for the native quote claim
+	 * @returns The claim transaction plan
+	 */
+	async createQuoteClaimTransaction(params: CreateQuoteClaimTransactionParams): Promise<QuoteTransactionPlan> {
+		const source =
+			params.source?.kind === 'pool'
+				? { kind: 'pool' as const, protocol: params.source.protocol, pool: params.source.pool.toBase58() }
+				: params.source?.kind === 'holding'
+					? { kind: 'holding' as const, authority: params.source.authority.toBase58() }
+					: params.source;
+
+		const response = await this.bagsApiClient.post<QuoteTransactionPlanWire>('/token-launch/create-claim-txs/v2', {
+			transactionFormat: params.transactionFormat,
+			feeLimits: params.feeLimits?.map((feeLimit) => ({
+				asset: { mint: feeLimit.asset.mint.toBase58(), tokenProgram: feeLimit.asset.tokenProgram.toBase58() },
+				basisPoints: feeLimit.basisPoints,
+				maximumFeeRaw: feeLimit.maximumFeeRaw,
+			})),
+			additionalLookupTables: params.additionalLookupTables?.map((table) => table.toBase58()),
+			feeClaimer: params.feeClaimer.toBase58(),
+			tokenMint: params.tokenMint.toBase58(),
+			quoteMint: params.quoteMint?.toBase58(),
+			source,
+		});
+
+		return decodeQuoteTransactionPlan(response);
+	}
+
+	/**
+	 * Get quote mints usable for native (any-token) DBC and DAMM v2 direct launches, along
+	 * with per-flow review and availability status.
+	 *
+	 * @param flow Optional: only return capabilities for this native quote launch flow
+	 * @returns The supported quote tokens
+	 */
+	async getSupportedQuoteTokens(flow?: NativeQuoteFlow): Promise<QuoteCapabilitiesResponse> {
+		return this.bagsApiClient.get<QuoteCapabilitiesResponse>('/token-launch/supported-quote-tokens', {
+			params: { flow },
+		});
 	}
 }

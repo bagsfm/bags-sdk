@@ -4,6 +4,8 @@ import type { BagsGetOrCreateFeeShareConfigArgs, TransactionTipConfig } from '..
 import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../constants';
 import { chunkArray } from '../utils/helpers';
 import { GetOrCreateConfigApiResponse } from '../types/fee-share';
+import { CreateQuoteFeeShareConfigParams, QuoteFeeShareConfigResponse, QuoteFeeShareConfigResponseWire } from '../types/fee-share-quotes';
+import { decodeQuoteTransactionPlan } from '../utils/fee-share-quotes';
 import { validateAndNormalizeCreateFeeShareConfigParams } from '../utils/validations';
 import bs58 from 'bs58';
 
@@ -133,6 +135,53 @@ export class ConfigService extends BaseService {
 			transactions,
 			bundles,
 			meteoraConfigKey: new PublicKey(response.meteoraConfigKey),
+		};
+	}
+
+	/**
+	 * Create (or fetch) a native quote Fee Share config, denominated in any supported quote
+	 * mint, not just wrapped SOL.
+	 *
+	 * Returns a staged transaction plan when `needsCreation` is true: sign and send the
+	 * entries in `plan.transactions` in order. If `plan.readiness.status` is `setup_required`,
+	 * confirm the setup transaction(s) first, then call this again to fetch the rebuilt plan.
+	 * Quote mints must be reviewed for production before a plan can be built for them; see
+	 * `TokenLaunchService.getSupportedQuoteTokens`.
+	 *
+	 * @param params The parameters for the native quote config creation
+	 * @returns The config's current state and, if needed, the plan to create it
+	 */
+	async createQuoteFeeShareConfig(params: CreateQuoteFeeShareConfigParams): Promise<QuoteFeeShareConfigResponse> {
+		const response = await this.bagsApiClient.post<QuoteFeeShareConfigResponseWire>('/fee-share/config/v2', {
+			transactionFormat: params.transactionFormat,
+			feeLimits: params.feeLimits?.map((feeLimit) => ({
+				asset: { mint: feeLimit.asset.mint.toBase58(), tokenProgram: feeLimit.asset.tokenProgram.toBase58() },
+				basisPoints: feeLimit.basisPoints,
+				maximumFeeRaw: feeLimit.maximumFeeRaw,
+			})),
+			additionalLookupTables: params.additionalLookupTables?.map((table) => table.toBase58()),
+			baseMint: params.baseMint.toBase58(),
+			payer: params.payer.toBase58(),
+			flow: params.flow,
+			claimersArray: params.claimersArray.map((claimer) => claimer.toBase58()),
+			basisPointsArray: params.basisPointsArray,
+			quoteMint: params.quoteMint?.toBase58(),
+			quoteTokenProgram: params.quoteTokenProgram?.toBase58(),
+			partner: params.partner?.toBase58(),
+			partnerConfig: params.partnerConfig?.toBase58(),
+			admin: params.admin?.toBase58(),
+			bagsConfigType: params.bagsConfigType,
+			enableFirstSwapWithMinFee: params.enableFirstSwapWithMinFee,
+			tipWallet: params.tipWallet?.toBase58(),
+			tipLamports: params.tipLamports,
+		});
+
+		return {
+			...response,
+			feeShareConfig: new PublicKey(response.feeShareConfig),
+			feeShareAuthority: new PublicKey(response.feeShareAuthority),
+			meteoraConfigKey: response.meteoraConfigKey ? new PublicKey(response.meteoraConfigKey) : null,
+			plan: response.plan ? decodeQuoteTransactionPlan(response.plan) : null,
 		};
 	}
 }
