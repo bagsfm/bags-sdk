@@ -32,6 +32,12 @@ export class FeeShareAdminService extends BaseService {
 	 * Get a transaction to transfer fee share admin authority to a new admin
 	 * @param params - The transfer parameters
 	 * @returns The transfer admin transaction and blockhash
+	 *
+	 * Note: The returned transaction already carries a partial signature from the fee-share
+	 * program administrator, which the on-chain program requires as a co-signer. Sign it with
+	 * the payer's key without replacing the blockhash or discarding the existing signature.
+	 * Passing the program administrator's own wallet as `payer`, `currentAdmin`, or `newAdmin`
+	 * is rejected by the API.
 	 */
 	async getTransferAdminTransaction(params: TransferFeeShareAdminParams): Promise<{ transaction: VersionedTransaction; blockhash: BlockhashWithExpiryBlockHeight }> {
 		const response = await this.bagsApiClient.post<{ transaction: TransactionWithBlockhash }>('/fee-share/admin/transfer-tx', {
@@ -69,6 +75,12 @@ export class FeeShareAdminService extends BaseService {
 	 * Note: The returned transactions must be signed and sent in order.
 	 * When there are more than 7 fee claimers, additionalLookupTables is required.
 	 * Use getUpdateConfigLookupTableTransactions to create the necessary LUT first.
+	 *
+	 * Note: Each returned transaction already carries a partial signature from the fee-share
+	 * program administrator, which the on-chain program requires as a co-signer. Sign them with
+	 * the payer's key without replacing the blockhash or discarding the existing signature.
+	 * Passing the program administrator's own wallet as `payer` or as the config's current
+	 * manager is rejected by the API.
 	 */
 	async getUpdateConfigTransactions(params: UpdateFeeShareConfigParams): Promise<Array<{ transaction: VersionedTransaction; blockhash: BlockhashWithExpiryBlockHeight }>> {
 		const response = await this.bagsApiClient.post<{ transactions: Array<TransactionWithBlockhash> }>('/fee-share/admin/update-config', {
