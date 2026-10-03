@@ -1,5 +1,7 @@
 import { BAGS_FEE_SHARE_V2_MAX_CLAIMERS_NON_LUT } from '../constants';
 import {
+	BAGS_PAYOUT_CASHOUT_METHODS,
+	BagsPayoutCashoutInput,
 	BagsGetOrCreateFeeShareConfigArgs,
 	CreateDexscreenerOrderParams,
 	CreateTokenInfoParams,
@@ -134,6 +136,8 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		throw new Error('enableFirstSwapWithMinFee must be a boolean');
 	}
 
+	const payoutCashout = params.payoutCashout === undefined ? undefined : validatePayoutCashout(params.payoutCashout);
+
 	return {
 		basisPointsArray: params.feeClaimers.map((claimer) => claimer.userBps),
 		payer: params.payer.toBase58(),
@@ -147,7 +151,22 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		admin: params.admin?.toBase58() ?? undefined,
 		bagsConfigType: params.bagsConfigType ?? BAGS_CONFIG_TYPE.DEFAULT,
 		enableFirstSwapWithMinFee: params.enableFirstSwapWithMinFee,
+		payoutCashout,
 	};
+}
+
+export function validatePayoutCashout(cashout: BagsPayoutCashoutInput): BagsPayoutCashoutInput {
+	if (!cashout || !(BAGS_PAYOUT_CASHOUT_METHODS as readonly string[]).includes(cashout.method)) {
+		throw new Error(`cashout method must be one of: ${BAGS_PAYOUT_CASHOUT_METHODS.join(', ')}`);
+	}
+
+	const username = typeof cashout.username === 'string' ? cashout.username.trim() : '';
+
+	if (username.length < 1 || username.length > 64) {
+		throw new Error('cashout username must be between 1 and 64 characters');
+	}
+
+	return { method: cashout.method, username };
 }
 
 export function validateAndNormalizeGetTradeQuoteParams(params: GetTradeQuoteParams): NormalizedGetTradeQuoteParams {

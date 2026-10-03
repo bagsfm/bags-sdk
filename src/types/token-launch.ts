@@ -1,5 +1,6 @@
 import { PublicKey, VersionedTransaction } from '@solana/web3.js';
 import { BAGS_CONFIG_TYPE, TransactionTipConfig } from './api';
+import type { BagsPayoutCashoutInput } from './bags-payout';
 import type { ImageInput } from '../utils/image';
 
 export type GetOrCreateConfigResponse = {
@@ -239,6 +240,7 @@ export type NormalizedCreateFeeShareConfigParams = {
 	admin?: string;
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
 	enableFirstSwapWithMinFee?: boolean;
+	payoutCashout?: BagsPayoutCashoutInput;
 };
 
 export interface DammV2SupportedQuoteToken {

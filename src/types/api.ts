@@ -1,4 +1,5 @@
 import type { BlockhashWithExpiryBlockHeight, PublicKey } from '@solana/web3.js';
+import type { BagsPayoutCashoutInput } from './bags-payout';
 
 type BagsSuccessApiResponse<T> = {
 	success: true;
@@ -127,6 +128,8 @@ export type BagsGetOrCreateFeeShareConfigArgs = {
 	admin?: PublicKey;
 	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
 	enableFirstSwapWithMinFee?: boolean;
+	/** Required when the payout wallet is a claimer (it must then be the only claimer at 10000 bps). */
+	payoutCashout?: BagsPayoutCashoutInput;
 };
 
 export type TransactionWithBlockhash = {
@@ -360,4 +363,6 @@ export type UpdateFeeShareConfigParams = {
 	payer: PublicKey;
 	baseMint: PublicKey;
 	additionalLookupTables?: Array<PublicKey>;
+	/** Required when the payout wallet is a claimer (it must then be the only claimer at 10000 bps). */
+	payoutCashout?: BagsPayoutCashoutInput;
 };
