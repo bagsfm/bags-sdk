@@ -77,6 +77,7 @@ new BagsSDK(apiKey: string, connection: Connection, commitment?: Commitment)
 | **Solana** | `sdk.solana` | Submit Jito bundles, check bundle statuses, and query Jito tip fees |
 | **Fee Share Admin** | `sdk.feeShareAdmin` | Transfer admin roles, list admin mints, and update fee-share configs |
 | **Dexscreener** | `sdk.dexscreener` | Check order availability, create orders, and submit payments for Dexscreener listings |
+| **BagsPay** | `sdk.bagsPay` | Read who a BagsPay coin pays, its status, and its distribution history |
 | **Auth** | `sdk.auth` | Fetch the API key owner's user profile |
 | **Robinhood** | `sdk.robinhood` | List Robinhood Chain claimable positions and build unsigned claim transactions |
 
