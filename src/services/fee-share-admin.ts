@@ -3,6 +3,7 @@ import { BaseService } from './base';
 import { TransactionWithBlockhash, TransferFeeShareAdminParams, UpdateFeeShareConfigParams } from '../types';
 import { BAGS_FEE_SHARE_ADMIN_MAX_CLAIMERS_NON_LUT } from '../constants';
 import { ConfigService } from './config';
+import { validatePayoutCashout } from '../utils/validations';
 import bs58 from 'bs58';
 
 export class FeeShareAdminService extends BaseService {
@@ -77,6 +78,7 @@ export class FeeShareAdminService extends BaseService {
 			claimersArray: params.feeClaimers.map((claimer) => claimer.user.toBase58()),
 			payer: params.payer.toBase58(),
 			additionalLookupTables: params.additionalLookupTables?.map((table) => table.toBase58()),
+			payoutCashout: params.payoutCashout === undefined ? undefined : validatePayoutCashout(params.payoutCashout),
 		});
 
 		const deserializedTransactionsWithBlockhash = response.transactions.map((tx) => {
