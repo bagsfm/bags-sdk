@@ -337,7 +337,7 @@ export class StateService {
 	 * Get launch wallet for social username
 	 *
 	 * @param username The username to get the launch wallet for
-	 * @param provider The social provider, e.g. `twitter`, `tiktok`
+	 * @param provider The social provider, e.g. `twitter`, `tiktok`, `domain`
 	 * @param chain The blockchain to resolve the wallet on. Defaults to `SOL`. `SOL` returns a `PublicKey`, `EVM` returns a `0x…` string address.
 	 * @returns The launch wallet
 	 * @throws Error if the request fails or the response indicates failure
