@@ -33,8 +33,8 @@ export type GetPoolConfigKeyByFeeClaimerVaultApiResponse = {
 	poolConfigKeys: Array<string>;
 };
 
-export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github', 'moltbook'] as const;
-export const SUPPORTED_LAUNCH_SOCIAL_PROVIDERS = ['twitter', 'tiktok', 'kick', 'github'] as const;
+export const VALID_SOCIAL_PROVIDERS = ['apple', 'google', 'email', 'solana', 'twitter', 'tiktok', 'kick', 'instagram', 'onlyfans', 'github', 'moltbook', 'domain'] as const;
+export const SUPPORTED_LAUNCH_SOCIAL_PROVIDERS = ['twitter', 'tiktok', 'kick', 'github', 'domain'] as const;
 
 export type SocialProvider = (typeof VALID_SOCIAL_PROVIDERS)[number];
 export type SupportedSocialProvider = (typeof SUPPORTED_LAUNCH_SOCIAL_PROVIDERS)[number];
