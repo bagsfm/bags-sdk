@@ -117,6 +117,9 @@ export const BAGS_CONFIG_TYPE = {
 	DEFAULT_96_LOCKED: 'ba28db46-ea6f-4452-8218-5587f6aca0a1',
 } as const;
 
+/** Known seeded config types, or the id of any admin-created type. */
+export type BagsConfigTypeId = (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | (string & {});
+
 export type BagsGetOrCreateFeeShareConfigArgs = {
 	feeClaimers: Array<BagsFeeClaimer>;
 	payer: PublicKey;
@@ -125,7 +128,7 @@ export type BagsGetOrCreateFeeShareConfigArgs = {
 	partnerConfig?: PublicKey;
 	additionalLookupTables?: Array<PublicKey>;
 	admin?: PublicKey;
-	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
+	bagsConfigType?: BagsConfigTypeId;
 	enableFirstSwapWithMinFee?: boolean;
 };
 
