@@ -4,7 +4,6 @@ import {
 	CreateDexscreenerOrderParams,
 	CreateTokenInfoParams,
 	GetTradeQuoteParams,
-	BAGS_CONFIG_TYPE,
 	NormalizedCreateDexscreenerOrderParams,
 	NormalizedCreateFeeShareConfigParams,
 	NormalizedCreateTokenInfoParams,
@@ -126,8 +125,8 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		}
 	}
 
-	if (params.bagsConfigType && !Object.values(BAGS_CONFIG_TYPE).includes(params.bagsConfigType)) {
-		throw new Error('bagsConfigType must be a valid BAGS_CONFIG_TYPE');
+	if (params.bagsConfigType !== undefined && (typeof params.bagsConfigType !== 'string' || params.bagsConfigType.length === 0 || params.bagsConfigType.length > 64)) {
+		throw new Error('bagsConfigType must be a config type id of at most 64 characters');
 	}
 
 	if (params.enableFirstSwapWithMinFee !== undefined && typeof params.enableFirstSwapWithMinFee !== 'boolean') {
@@ -145,7 +144,7 @@ export function validateAndNormalizeCreateFeeShareConfigParams(params: BagsGetOr
 		tipLamports: tipConfig?.tipLamports,
 		additionalLookupTables: params.additionalLookupTables?.map((lookupTable) => lookupTable.toBase58()),
 		admin: params.admin?.toBase58() ?? undefined,
-		bagsConfigType: params.bagsConfigType ?? BAGS_CONFIG_TYPE.DEFAULT,
+		bagsConfigType: params.bagsConfigType,
 		enableFirstSwapWithMinFee: params.enableFirstSwapWithMinFee,
 	};
 }

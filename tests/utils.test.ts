@@ -260,14 +260,14 @@ describe('validation utilities', () => {
 		);
 	});
 
-	test('validateAndNormalizeCreateFeeShareConfigParams defaults bagsConfigType to DEFAULT', () => {
+	test('validateAndNormalizeCreateFeeShareConfigParams leaves bagsConfigType unset so the backend default applies', () => {
 		const payload = validateAndNormalizeCreateFeeShareConfigParams({
 			payer: new PublicKey(new Uint8Array(32).fill(1)),
 			baseMint: new PublicKey(new Uint8Array(32).fill(2)),
 			feeClaimers: [{ user: new PublicKey(new Uint8Array(32).fill(3)), userBps: 10_000 }],
 		});
 
-		expect(payload.bagsConfigType).toBe(BAGS_CONFIG_TYPE.DEFAULT);
+		expect(payload.bagsConfigType).toBeUndefined();
 	});
 
 	test('validateAndNormalizeCreateFeeShareConfigParams keeps an explicit bagsConfigType', () => {

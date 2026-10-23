@@ -147,9 +147,9 @@ describe('ConfigService', () => {
 					{ user: claimerA, userBps: 5000 },
 					{ user: claimerB, userBps: 5000 },
 				],
-				bagsConfigType: 'not-a-valid-uuid' as typeof BAGS_CONFIG_TYPE[keyof typeof BAGS_CONFIG_TYPE],
+				bagsConfigType: 'x'.repeat(65),
 			})
-		).rejects.toThrow('bagsConfigType must be a valid BAGS_CONFIG_TYPE');
+		).rejects.toThrow('bagsConfigType must be a config type id of at most 64 characters');
 	});
 
 	test('createBagsFeeShareConfig accepts all valid bagsConfigType values', async () => {

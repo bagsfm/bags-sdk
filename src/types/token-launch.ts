@@ -1,5 +1,5 @@
 import { PublicKey, VersionedTransaction } from '@solana/web3.js';
-import { BAGS_CONFIG_TYPE, TransactionTipConfig } from './api';
+import { BagsConfigTypeId, TransactionTipConfig } from './api';
 import type { ImageInput } from '../utils/image';
 
 export type GetOrCreateConfigResponse = {
@@ -129,7 +129,7 @@ export interface BagsLaunchPadTokenLaunch {
 	/** Meteora DBC config address. */
 	dbcConfigKey: string | null;
 	/** DBC launch mode. `null` when the token has no `dbcConfigKey` (pre-launch or DAMM v2 direct). */
-	bagsConfigType: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE] | null;
+	bagsConfigType: BagsConfigTypeId | null;
 	/** DAMM v2 pool address. */
 	dammV2PoolKey: string | null;
 	/** Launch mechanism; `null` means legacy DBC. */
@@ -237,7 +237,7 @@ export type NormalizedCreateFeeShareConfigParams = {
 	tipLamports?: number;
 	additionalLookupTables?: Array<string>;
 	admin?: string;
-	bagsConfigType?: (typeof BAGS_CONFIG_TYPE)[keyof typeof BAGS_CONFIG_TYPE];
+	bagsConfigType?: BagsConfigTypeId;
 	enableFirstSwapWithMinFee?: boolean;
 };
 
